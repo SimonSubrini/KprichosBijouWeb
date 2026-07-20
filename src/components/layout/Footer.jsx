@@ -3,7 +3,7 @@ import { InstagramLogo, WhatsappLogo, Envelope } from '@phosphor-icons/react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-brand-pink/20 pt-12 pb-8 border-t border-brand-pink/50 mt-auto">
+    <footer id="footer" className="bg-brand-pink/20 pt-12 pb-8 border-t border-brand-pink/50 mt-auto">
       <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex flex-col items-center md:items-start">
           <div className="flex items-center gap-3 mb-4">

@@ -23,7 +23,7 @@ export const Header = () => {
         <nav className="hidden md:flex items-center gap-8 font-medium text-brand-dark">
           <Link to="/" className="hover:text-brand-magenta transition-colors">Inicio</Link>
           <Link to="/catalogo" className="hover:text-brand-magenta transition-colors">Catálogo</Link>
-          <Link to="/nosotros" className="hover:text-brand-magenta transition-colors">Nosotros</Link>
+          <a href="#footer" className="hover:text-brand-magenta transition-colors">Contacto</a>
         </nav>
 
         <div className="flex items-center gap-4">
