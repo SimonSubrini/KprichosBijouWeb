@@ -15,6 +15,13 @@ export default {
       description: 'Breve descripción que se muestra en la tarjeta del producto.'
     },
     {
+      name: 'longDescription',
+      title: 'Descripción Larga',
+      type: 'array',
+      of: [{type: 'block'}],
+      description: 'Descripción completa que se muestra en la página de detalle del producto.'
+    },
+    {
       name: 'basePrice',
       title: 'Precio Base',
       type: 'number',

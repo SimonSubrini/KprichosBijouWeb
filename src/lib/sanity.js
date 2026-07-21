@@ -22,3 +22,20 @@ export const fetchProducts = async () => {
   }`;
   return await sanityClient.fetch(query);
 };
+
+export const fetchProductById = async (id) => {
+  const query = `*[_type == "product" && _id == $id][0]{
+    _id,
+    name,
+    description,
+    longDescription,
+    basePrice,
+    type,
+    stockCount,
+    hasModels,
+    models,
+    customizationOptions,
+    "imageUrls": images[].asset->url
+  }`;
+  return await sanityClient.fetch(query, { id });
+};

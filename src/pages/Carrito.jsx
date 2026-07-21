@@ -6,6 +6,10 @@ import { Link } from 'react-router-dom';
 
 export const Carrito = () => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [shippingMethod, setShippingMethod] = useState('');
+  const [city, setCity] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+
   const { items, removeItem, getCartTotal, getCartDiscount, updateQuantity, clearCart } = useCartStore();
   const total = getCartTotal();
   const discount = getCartDiscount();
@@ -45,6 +49,15 @@ export const Carrito = () => {
       message += `*Descuento Mayorista:* -$${discount}\n`;
     }
     message += `*Total Estimado:* $${finalTotal}\n\n`;
+
+    if (shippingMethod === 'correo') {
+      message += `*Envío:* Correo Argentino\n`;
+      message += `*Ciudad:* ${city}\n`;
+      message += `*C.P.:* ${postalCode}\n\n`;
+    } else if (shippingMethod === 'local') {
+      message += `*Envío:* Retiro por local (Allen, Río Negro)\n\n`;
+    }
+
     message += "Quedo a la espera para coordinar el pago y envío. ¡Gracias!";
     
     const encodedMessage = encodeURIComponent(message);
@@ -68,8 +81,8 @@ export const Carrito = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 space-y-4">
             {items.map((item) => (
               <div key={item.id} className="flex gap-4 p-4 bg-white rounded-2xl shadow-sm border border-brand-pink/20">
                 <div className="w-24 h-24 bg-brand-light rounded-xl overflow-hidden flex-shrink-0">
@@ -115,24 +128,85 @@ export const Carrito = () => {
             ))}
           </div>
           
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-pink/20 h-fit sticky top-24">
-            <h3 className="text-xl font-bold font-display text-brand-dark mb-5">Resumen de Compra</h3>
-            <div className="flex justify-between text-brand-dark mb-1">
+          <div className="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-brand-pink/20 h-fit sticky top-24">
+            <h3 className="text-xl font-bold font-display text-brand-dark mb-5">Opciones de Envío</h3>
+            
+            <div className="flex flex-col gap-3 mb-6">
+              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-brand-pink/30 hover:bg-brand-light/30 transition-colors">
+                <input 
+                  type="radio" 
+                  name="shipping" 
+                  value="local"
+                  checked={shippingMethod === 'local'}
+                  onChange={() => setShippingMethod('local')}
+                  className="mt-1 accent-brand-magenta"
+                />
+                <div>
+                  <span className="block font-semibold text-brand-dark text-sm">Retiro en Domicilio</span>
+                  <span className="block text-xs text-brand-dark/60 mt-0.5">Allen, Río Negro (Gratis)</span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-brand-pink/30 hover:bg-brand-light/30 transition-colors">
+                <input 
+                  type="radio" 
+                  name="shipping" 
+                  value="correo"
+                  checked={shippingMethod === 'correo'}
+                  onChange={() => setShippingMethod('correo')}
+                  className="mt-1 accent-brand-magenta"
+                />
+                <div>
+                  <span className="block font-semibold text-brand-dark text-sm">Envío por Correo Argentino</span>
+                  <span className="block text-xs text-brand-dark/60 mt-0.5">Costo a cargo del comprador</span>
+                </div>
+              </label>
+            </div>
+
+            {shippingMethod === 'correo' && (
+              <div className="mb-6 space-y-4 p-4 bg-brand-light/20 rounded-xl border border-brand-pink/30 animate-fade-in">
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Ciudad / Provincia</label>
+                  <input 
+                    type="text"
+                    required
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Ej: Neuquén Capital"
+                    className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Código Postal</label>
+                  <input 
+                    type="text"
+                    required
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="Ej: 8300"
+                    className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta"
+                  />
+                </div>
+              </div>
+            )}
+
+            <h3 className="text-xl font-bold font-display text-brand-dark mb-5 border-t border-brand-pink/30 pt-6">Resumen de Compra</h3>
+            <div className="flex justify-between text-brand-dark mb-1 text-sm">
               <span>Subtotal (Sin envío)</span>
               <span className="font-medium">${total}</span>
             </div>
-            <div className="flex justify-between text-brand-dark/70 text-sm mb-3">
+            <div className="flex justify-between text-brand-dark/70 text-xs mb-3">
               <span>Precio sin impuestos</span>
-              <span>${(finalTotal * 0.79).toFixed(2)}</span>
+              <span>${(finalTotal / 1.21).toFixed(2)}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-brand-magenta font-bold mb-3">
+              <div className="flex justify-between text-brand-magenta font-bold mb-3 text-sm">
                 <span>Descuento Mayorista</span>
                 <span>-${discount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-brand-dark/70 text-sm mb-5 pb-5 border-b border-brand-pink/30">
-              <span>Envío</span>
+              <span>Costo de Envío</span>
               <span>A coordinar</span>
             </div>
             <div className="flex justify-between font-bold text-2xl font-display text-brand-dark mb-6">

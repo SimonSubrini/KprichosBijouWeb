@@ -9,6 +9,7 @@ import { ComoComprar } from './pages/ComoComprar';
 import { PreguntasFrecuentes } from './pages/PreguntasFrecuentes';
 import { Resenas } from './pages/Resenas';
 import { SobreNosotros } from './pages/SobreNosotros';
+import { ProductoDetalle } from './pages/ProductoDetalle';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center space-y-10 animate-fade-in">
@@ -53,6 +54,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Catalogo />} />
+          <Route path="/producto/:id" element={<ProductoDetalle />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/envios" element={<Envios />} />
           <Route path="/como-comprar" element={<ComoComprar />} />

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useCartStore } from '../../store/cartStore';
 import { Button } from './Button';
-import { X, Trash, ShoppingCart } from '@phosphor-icons/react';
+import { X, Trash, ShoppingCart, Minus, Plus } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const CartSidebar = () => {
-  const { items, isSidebarOpen, closeSidebar, removeItem, getCartTotal, getCartDiscount } = useCartStore();
+  const { items, isSidebarOpen, closeSidebar, removeItem, getCartTotal, getCartDiscount, updateQuantity } = useCartStore();
   const navigate = useNavigate();
 
   if (!isSidebarOpen) return null;
@@ -57,10 +57,24 @@ export const CartSidebar = () => {
                 </div>
                 <div className="flex flex-col flex-grow justify-center">
                   <h4 className="font-bold text-brand-dark text-sm leading-tight line-clamp-1">{item.product.name}</h4>
-                  <p className="text-xs text-brand-dark/60 mb-1">Cant: {item.quantity}</p>
-                  <span className="font-bold font-display text-brand-magenta text-sm">
-                    ${item.product.basePrice * item.quantity}
-                  </span>
+                  <p className="text-xs text-brand-dark/60 mb-1 leading-tight line-clamp-1">{item.customizations || 'Sin personalización'}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center gap-2 bg-brand-light/50 rounded-full border border-brand-pink/30 px-1.5 py-0.5">
+                      <button 
+                        onClick={() => item.quantity > 1 && updateQuantity(item.id, -1)}
+                        disabled={item.quantity <= 1}
+                        className={`w-5 h-5 flex items-center justify-center rounded-full shadow-sm transition-colors ${item.quantity <= 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-brand-dark hover:text-brand-magenta bg-white'}`}
+                      ><Minus size={10} weight="bold"/></button>
+                      <span className="font-medium text-xs min-w-[16px] text-center">{item.quantity}</span>
+                      <button 
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="text-brand-dark hover:text-brand-magenta w-5 h-5 flex items-center justify-center rounded-full bg-white shadow-sm"
+                      ><Plus size={10} weight="bold"/></button>
+                    </div>
+                    <span className="font-bold font-display text-brand-magenta text-sm">
+                      ${item.product.basePrice * item.quantity}
+                    </span>
+                  </div>
                 </div>
                 <button 
                   onClick={() => removeItem(item.id)} 
@@ -92,10 +106,10 @@ export const CartSidebar = () => {
             
             <div className="flex flex-col gap-3">
               <Button variant="primary" className="w-full justify-center" onClick={handleCheckoutClick}>
-                Continuar compra
+                Ver Carrito / Pagar
               </Button>
               <Button variant="outline" className="w-full justify-center" onClick={closeSidebar}>
-                Seguir comprando
+                Cerrar Panel
               </Button>
             </div>
           </div>
