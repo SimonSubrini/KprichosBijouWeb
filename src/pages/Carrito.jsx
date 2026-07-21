@@ -90,8 +90,9 @@ export const Carrito = () => {
                   <div className="flex justify-between items-center mt-4">
                     <div className="flex items-center gap-3 bg-brand-light/50 rounded-full border border-brand-pink/30 px-2 py-1">
                       <button 
-                        onClick={() => updateQuantity(item.id, -1)}
-                        className="text-brand-dark hover:text-brand-magenta w-6 h-6 flex items-center justify-center rounded-full bg-white shadow-sm"
+                        onClick={() => item.quantity > 1 && updateQuantity(item.id, -1)}
+                        disabled={item.quantity <= 1}
+                        className={`w-6 h-6 flex items-center justify-center rounded-full shadow-sm transition-colors ${item.quantity <= 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-brand-dark hover:text-brand-magenta bg-white'}`}
                       ><Minus size={12} weight="bold"/></button>
                       <span className="font-medium text-sm min-w-[20px] text-center">{item.quantity}</span>
                       <button 
@@ -99,7 +100,7 @@ export const Carrito = () => {
                         className="text-brand-dark hover:text-brand-magenta w-6 h-6 flex items-center justify-center rounded-full bg-white shadow-sm"
                       ><Plus size={12} weight="bold"/></button>
                     </div>
-                    <span className="font-bold font-display text-brand-magenta text-xl">
+                    <span className="font-bold font-display text-brand-magenta text-lg whitespace-nowrap shrink-0 text-right ml-4 min-w-[70px]">
                       ${item.product.basePrice * item.quantity}
                     </span>
                   </div>

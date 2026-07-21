@@ -20,9 +20,14 @@ export const Header = () => {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-8 font-medium text-brand-dark">
+        <nav className="hidden md:flex items-center gap-6 font-medium text-brand-dark text-sm lg:text-base">
           <Link to="/" className="hover:text-brand-magenta transition-colors">Inicio</Link>
           <Link to="/productos" className="hover:text-brand-magenta transition-colors">Productos</Link>
+          <Link to="/envios" className="hover:text-brand-magenta transition-colors">Envíos</Link>
+          <Link to="/como-comprar" className="hover:text-brand-magenta transition-colors">¿Cómo compro?</Link>
+          <Link to="/sobre-nosotros" className="hover:text-brand-magenta transition-colors">Sobre Nosotros</Link>
+          <Link to="/preguntas" className="hover:text-brand-magenta transition-colors">FAQ</Link>
+          <Link to="/resenas" className="hover:text-brand-magenta transition-colors">Reseñas</Link>
           <a href="#footer" className="hover:text-brand-magenta transition-colors">Contacto</a>
         </nav>
 

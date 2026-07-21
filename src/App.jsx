@@ -4,6 +4,11 @@ import { Layout } from './components/layout/Layout';
 import { Button } from './components/ui/Button';
 import { Catalogo } from './pages/Catalogo';
 import { Carrito } from './pages/Carrito';
+import { Envios } from './pages/Envios';
+import { ComoComprar } from './pages/ComoComprar';
+import { PreguntasFrecuentes } from './pages/PreguntasFrecuentes';
+import { Resenas } from './pages/Resenas';
+import { SobreNosotros } from './pages/SobreNosotros';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center space-y-10 animate-fade-in">
@@ -49,7 +54,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Catalogo />} />
           <Route path="/carrito" element={<Carrito />} />
-          <Route path="/nosotros" element={<div className="py-20 text-center"><h2 className="text-3xl font-display text-brand-magenta mb-4">Sobre Nosotros</h2><p>Conoce más de Kprichos Bijou.</p></div>} />
+          <Route path="/envios" element={<Envios />} />
+          <Route path="/como-comprar" element={<ComoComprar />} />
+          <Route path="/preguntas" element={<PreguntasFrecuentes />} />
+          <Route path="/resenas" element={<Resenas />} />
+          <Route path="/sobre-nosotros" element={<SobreNosotros />} />
         </Routes>
       </Layout>
     </Router>
