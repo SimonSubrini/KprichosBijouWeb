@@ -50,7 +50,7 @@ export const ProductCard = ({ product }) => {
         {product.imageUrls && product.imageUrls.length > 0 ? (
           <>
             <img 
-              src={product.imageUrls[currentImageIndex]} 
+              src={`${product.imageUrls[currentImageIndex]}?w=800&auto=format&fit=max`} 
               alt={product.name} 
               className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" 
             />
@@ -108,7 +108,7 @@ export const ProductCard = ({ product }) => {
             {!product.hasModels && product.type === 'stock' ? (
               <><ShoppingCart size={18} weight="bold" /> Agregar</>
             ) : (
-              product.hasModels ? 'Elegir Modelo' : 'Personalizar'
+              'Personalizar'
             )}
           </Button>
         </div>

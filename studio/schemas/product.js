@@ -88,8 +88,10 @@ export default {
               type: 'string',
               options: {
                 list: [
-                  { title: 'Lista de Opciones (Select)', value: 'list' },
-                  { title: 'Texto Libre (Input)', value: 'text' }
+                  { title: 'Lista Simple (Select)', value: 'list' },
+                  { title: 'Texto Libre (Input)', value: 'text' },
+                  { title: 'Lista con Imágenes (Tooltips)', value: 'listImages' },
+                  { title: 'Dropdown Anidado (Dependiente)', value: 'nested' }
                 ],
                 layout: 'radio'
               },
@@ -97,11 +99,54 @@ export default {
             },
             { 
               name: 'choices', 
-              title: 'Opciones (separadas por coma)', 
+              title: 'Opciones Clásicas (separadas por coma)', 
               type: 'string',
-              hidden: ({parent}) => parent?.type === 'text'
+              hidden: ({parent}) => parent?.type !== 'list'
             },
-            { name: 'extraCost', title: 'Costo Adicional (Opcional)', type: 'number' }
+            { 
+              name: 'listOptions', 
+              title: 'Opciones con imagen', 
+              type: 'array',
+              of: [{
+                type: 'object',
+                fields: [
+                  { name: 'value', title: 'Valor (ej. Rojo)', type: 'string' },
+                  { name: 'image', title: 'Imagen (Tooltip)', type: 'image' }
+                ]
+              }],
+              hidden: ({parent}) => parent?.type !== 'listImages'
+            },
+            { 
+              name: 'childOptionName', 
+              title: 'Nombre de la opción dependiente (ej. Color)', 
+              type: 'string', 
+              hidden: ({parent}) => parent?.type !== 'nested' 
+            },
+            {
+              name: 'nestedOptions',
+              title: 'Opciones Anidadas',
+              type: 'array',
+              of: [{
+                type: 'object',
+                fields: [
+                  { name: 'parentChoice', title: 'Cuando el padre sea... (ej. Metalizado)', type: 'string' },
+                  { 
+                    name: 'childChoices', 
+                    title: 'Mostrar estas opciones hijas', 
+                    type: 'array',
+                    of: [{
+                      type: 'object',
+                      fields: [
+                        { name: 'value', title: 'Valor (ej. Dorado)', type: 'string' },
+                        { name: 'image', title: 'Imagen (Tooltip)', type: 'image' }
+                      ]
+                    }]
+                  }
+                ]
+              }],
+              hidden: ({parent}) => parent?.type !== 'nested'
+            },
+            { name: 'extraCost', title: 'Costo Adicional General (Opcional)', type: 'number' }
           ]
         }
       ],

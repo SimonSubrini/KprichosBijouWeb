@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchProductById } from '../lib/sanity';
 import { useCartStore } from '../store/cartStore';
 import { Button } from '../components/ui/Button';
+import { CustomDropdown } from '../components/ui/CustomDropdown';
 import { ShoppingCart, CaretLeft, CaretRight, Minus, Plus, ArrowLeft } from '@phosphor-icons/react';
 import { PortableText } from '@portabletext/react';
 
@@ -146,7 +147,7 @@ export const ProductoDetalle = () => {
             {product.imageUrls && product.imageUrls.length > 0 ? (
               <>
                 <img 
-                  src={product.imageUrls[currentImageIndex]} 
+                  src={`${product.imageUrls[currentImageIndex]}?w=1200&auto=format&fit=max`} 
                   alt={product.name} 
                   className="object-cover w-full h-full" 
                 />
@@ -256,6 +257,95 @@ export const ProductoDetalle = () => {
                             value={customValues[opt.optionName] || ''}
                             onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}
                           />
+                        </div>
+                      );
+                    }
+                    
+                    if (opt.type === 'listImages') {
+                      const hasExtraCost = opt.extraCost > 0;
+                      const optionsArr = [];
+                      if (!hasExtraCost) optionsArr.push({ value: '', label: 'Seleccionar...' });
+                      if (hasExtraCost) optionsArr.push({ value: 'Ninguno / Sin agregados', label: `Ninguno / Sin agregados (+$0)` });
+                      
+                      (opt.listOptions || []).forEach(lo => {
+                        optionsArr.push({
+                          value: lo.value,
+                          label: lo.value,
+                          image: lo.imageUrl
+                        });
+                      });
+
+                      const selectedVal = customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '');
+
+                      return (
+                        <div key={i} className="flex flex-col gap-2">
+                          <label className="text-sm font-semibold text-brand-dark">
+                            {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                          </label>
+                          <CustomDropdown 
+                            required
+                            options={optionsArr}
+                            value={selectedVal}
+                            onChange={(val) => handleCustomChange(opt.optionName, val)}
+                            placeholder="Seleccionar..."
+                          />
+                        </div>
+                      );
+                    }
+
+                    if (opt.type === 'nested') {
+                      const hasExtraCost = opt.extraCost > 0;
+                      const parentChoices = opt.nestedOptions ? opt.nestedOptions.map(n => n.parentChoice) : [];
+                      
+                      const parentOptions = [];
+                      if (!hasExtraCost) parentOptions.push({ value: '', label: 'Seleccionar...' });
+                      if (hasExtraCost) parentOptions.push({ value: 'Ninguno / Sin agregados', label: `Ninguno / Sin agregados (+$0)` });
+                      parentChoices.forEach(c => parentOptions.push({ value: c, label: c }));
+
+                      const selectedParent = customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '');
+                      
+                      const activeNestedGroup = opt.nestedOptions?.find(n => n.parentChoice === selectedParent);
+                      const childChoices = activeNestedGroup?.childChoices || [];
+                      const childOptions = childChoices.map(c => ({
+                        value: c.value,
+                        label: c.value,
+                        image: c.imageUrl
+                      }));
+
+                      const showChild = selectedParent && selectedParent !== 'Ninguno / Sin agregados' && childOptions.length > 0;
+
+                      return (
+                        <div key={i} className="flex flex-col gap-4 p-5 bg-brand-light/30 border border-brand-pink/30 rounded-2xl">
+                          <div className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-brand-dark">
+                              {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                            </label>
+                            <CustomDropdown 
+                              required
+                              options={parentOptions}
+                              value={selectedParent}
+                              onChange={(val) => {
+                                handleCustomChange(opt.optionName, val);
+                                handleCustomChange(opt.childOptionName, '');
+                              }}
+                              placeholder="Seleccionar..."
+                            />
+                          </div>
+
+                          {showChild && (
+                            <div className="flex flex-col gap-2 animate-fade-in pl-4 border-l-2 border-brand-pink/40 mt-1">
+                              <label className="text-sm font-semibold text-brand-dark">
+                                {opt.childOptionName}
+                              </label>
+                              <CustomDropdown 
+                                required
+                                options={[{value: '', label: 'Seleccionar...'}, ...childOptions]}
+                                value={customValues[opt.childOptionName] || ''}
+                                onChange={(val) => handleCustomChange(opt.childOptionName, val)}
+                                placeholder="Seleccionar..."
+                              />
+                            </div>
+                          )}
                         </div>
                       );
                     }

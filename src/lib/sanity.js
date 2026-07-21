@@ -17,7 +17,20 @@ export const fetchProducts = async () => {
     stockCount,
     hasModels,
     models,
-    customizationOptions,
+    customizationOptions[]{
+      ...,
+      listOptions[]{
+        ...,
+        "imageUrl": image.asset->url
+      },
+      nestedOptions[]{
+        ...,
+        childChoices[]{
+          ...,
+          "imageUrl": image.asset->url
+        }
+      }
+    },
     "imageUrls": images[].asset->url
   }`;
   return await sanityClient.fetch(query);
@@ -34,7 +47,20 @@ export const fetchProductById = async (id) => {
     stockCount,
     hasModels,
     models,
-    customizationOptions,
+    customizationOptions[]{
+      ...,
+      listOptions[]{
+        ...,
+        "imageUrl": image.asset->url
+      },
+      nestedOptions[]{
+        ...,
+        childChoices[]{
+          ...,
+          "imageUrl": image.asset->url
+        }
+      }
+    },
     "imageUrls": images[].asset->url
   }`;
   return await sanityClient.fetch(query, { id });

@@ -94,7 +94,7 @@ export const Carrito = () => {
   };
 
   return (
-    <div className="py-10 max-w-4xl mx-auto px-4 animate-fade-in">
+    <div className="py-10 max-w-6xl mx-auto px-4 animate-fade-in">
       <h2 className="text-4xl font-display font-bold text-brand-dark mb-8">Tu Carrito</h2>
       
       {items.length === 0 ? (
@@ -112,7 +112,7 @@ export const Carrito = () => {
               <div key={item.id} className="flex gap-4 p-4 bg-white rounded-2xl shadow-sm border border-brand-pink/20">
                 <div className="w-24 h-24 bg-brand-light rounded-xl overflow-hidden flex-shrink-0">
                   {item.product.imageUrls && item.product.imageUrls.length > 0 ? (
-                    <img src={item.product.imageUrls[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                    <img src={`${item.product.imageUrls[0]}?w=200&auto=format&fit=crop`} alt={item.product.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-brand-pink text-xs font-display">Sin imagen</div>
                   )}
