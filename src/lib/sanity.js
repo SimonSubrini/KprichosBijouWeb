@@ -15,6 +15,8 @@ export const fetchProducts = async () => {
     basePrice,
     type,
     stockCount,
+    hasModels,
+    models,
     customizationOptions,
     "imageUrls": images[].asset->url
   }`;

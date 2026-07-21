@@ -8,6 +8,7 @@ export const ProductCard = ({ product }) => {
   const [showModal, setShowModal] = useState(false);
   const [customValues, setCustomValues] = useState({});
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedModel, setSelectedModel] = useState('');
 
   const nextImage = (e) => {
     e.preventDefault();
@@ -26,10 +27,11 @@ export const ProductCard = ({ product }) => {
   };
 
   const handleAddToCart = () => {
-    if (product.type === 'stock') {
-      addItem(product, 1);
-    } else {
+    // Si tiene modelos o es personalizado, obligamos a pasar por el modal
+    if (product.hasModels || product.type === 'custom') {
       setShowModal(true);
+    } else {
+      addItem(product, 1);
     }
   };
 
@@ -39,8 +41,9 @@ export const ProductCard = ({ product }) => {
     let totalExtraCost = 0;
     
     // Convertir el objeto de valores a un string legible y calcular el costo extra
-    const customizationsString = Object.entries(customValues)
+    let customizationsString = Object.entries(customValues)
       .map(([key, value]) => {
+        if (!value || value === 'Ninguno / Sin agregados') return null; // Ignoramos los "Ninguno"
         const optionDef = options.find(opt => opt.optionName === key);
         if (optionDef && optionDef.extraCost) {
           totalExtraCost += optionDef.extraCost;
@@ -48,16 +51,29 @@ export const ProductCard = ({ product }) => {
         }
         return `${key}: ${value}`;
       })
+      .filter(Boolean)
       .join(' | ');
 
+    let finalPrice = product.basePrice;
+    let baseProductToCart = product;
+
+    if (product.hasModels && selectedModel) {
+      const modelDef = product.models.find(m => m.name === selectedModel);
+      if (modelDef) {
+        finalPrice = modelDef.price;
+        customizationsString = `Modelo: ${selectedModel}` + (customizationsString ? ` | ${customizationsString}` : '');
+      }
+    }
+
     const customizedProduct = {
-      ...product,
-      basePrice: product.basePrice + totalExtraCost
+      ...baseProductToCart,
+      basePrice: finalPrice + totalExtraCost
     };
 
     addItem(customizedProduct, 1, customizationsString);
     setShowModal(false);
     setCustomValues({}); // limpiar el estado para futuras compras
+    setSelectedModel('');
   };
 
   const handleCustomChange = (optionName, val) => {
@@ -66,6 +82,11 @@ export const ProductCard = ({ product }) => {
 
   // Asegurar que options sea un array aunque venga undefined desde Sanity
   const options = product.customizationOptions || [];
+  
+  // Calcular precio a mostrar
+  const displayPrice = product.hasModels && product.models?.length > 0 
+    ? `Desde $${Math.min(...product.models.map(m => m.price))}` 
+    : `$${product.basePrice}`;
 
   return (
     <>
@@ -121,18 +142,18 @@ export const ProductCard = ({ product }) => {
           
           <div className="mt-auto flex items-center justify-between">
             <span className="text-xl font-bold text-brand-magenta font-display">
-              ${product.basePrice}
+              {displayPrice}
             </span>
             <Button 
-              variant={product.type === 'stock' ? 'primary' : 'outline'} 
+              variant={!product.hasModels && product.type === 'stock' ? 'primary' : 'outline'} 
               size="sm" 
               onClick={handleAddToCart}
               className="flex gap-2"
             >
-              {product.type === 'stock' ? (
+              {!product.hasModels && product.type === 'stock' ? (
                 <><ShoppingCart size={18} weight="bold" /> Agregar</>
               ) : (
-                'Personalizar'
+                product.hasModels ? 'Elegir Modelo' : 'Personalizar'
               )}
             </Button>
           </div>
@@ -151,9 +172,47 @@ export const ProductCard = ({ product }) => {
             
             <form onSubmit={handleCustomSubmit} className="flex flex-col flex-grow overflow-hidden">
               <div className="p-6 overflow-y-auto">
+                {product.hasModels && product.models?.length > 0 && (
+                  <div className="space-y-5 mb-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-brand-dark">Modelo / Tamaño</label>
+                      <select 
+                        required
+                        className="p-3 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"
+                        value={selectedModel}
+                        onChange={(e) => setSelectedModel(e.target.value)}
+                      >
+                        <option value="" disabled>Selecciona un modelo</option>
+                        {product.models.map((m, idx) => (
+                          <option key={idx} value={m.name} disabled={m.stockCount <= 0}>
+                            {m.name} - ${m.price} {m.stockCount <= 0 ? '(Sin stock)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+                
                 {options.length > 0 ? (
                   <div className="space-y-5">
                     {options.map((opt, i) => {
+                      if (opt.type === 'text') {
+                        return (
+                          <div key={i} className="flex flex-col gap-2">
+                            <label className="text-sm font-semibold text-brand-dark">
+                              {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                            </label>
+                            <textarea 
+                              rows="3"
+                              className="p-3 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark resize-none"
+                              placeholder={`Escribe aquí...`}
+                              value={customValues[opt.optionName] || ''}
+                              onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}
+                            />
+                          </div>
+                        );
+                      }
+
                       // Sanity puede devolver strings separados por coma en "choices"
                       const choices = opt.choices ? opt.choices.split(',').map(c => c.trim()) : [];
                       return (
@@ -161,28 +220,18 @@ export const ProductCard = ({ product }) => {
                           <label className="text-sm font-semibold text-brand-dark">
                             {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                           </label>
-                          {choices.length > 0 ? (
-                            <select 
-                              required
-                              className="p-3 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"
-                              value={customValues[opt.optionName] || ''}
-                              onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}
-                            >
-                              <option value="" disabled>Selecciona una opción</option>
-                              {choices.map((c, j) => (
-                                <option key={j} value={c}>{c}</option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input 
-                              type="text" 
-                              required
-                              className="p-3 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"
-                              placeholder="Escribe tu preferencia..."
-                              value={customValues[opt.optionName] || ''}
-                              onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}
-                            />
-                          )}
+                          <select 
+                            required
+                            className="p-3 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"
+                            value={customValues[opt.optionName] || ''}
+                            onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}
+                          >
+                            <option value="" disabled>Selecciona una opción</option>
+                            <option value="Ninguno / Sin agregados">Ninguno / Sin agregados (+$0)</option>
+                            {choices.map((c, j) => (
+                              <option key={j} value={c}>{c}</option>
+                            ))}
+                          </select>
                         </div>
                       );
                     })}

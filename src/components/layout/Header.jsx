@@ -28,7 +28,6 @@ export const Header = () => {
           <Link to="/sobre-nosotros" className="hover:text-brand-magenta transition-colors">Sobre Nosotros</Link>
           <Link to="/preguntas" className="hover:text-brand-magenta transition-colors">FAQ</Link>
           <Link to="/resenas" className="hover:text-brand-magenta transition-colors">Reseñas</Link>
-          <a href="#footer" className="hover:text-brand-magenta transition-colors">Contacto</a>
         </nav>
 
         <div className="flex items-center gap-4">

@@ -8,6 +8,7 @@ export const Catalogo = () => {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const filterType = searchParams.get('type');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -23,9 +24,13 @@ export const Catalogo = () => {
     loadProducts();
   }, []);
 
-  const filteredProducts = filterType 
-    ? products.filter(p => p.type === filterType) 
-    : products;
+  const filteredProducts = products.filter(p => {
+    const matchesType = filterType ? p.type === filterType : true;
+    const matchesSearch = searchTerm === '' || 
+      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      p.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesType && matchesSearch;
+  });
 
   const handleFilter = (type) => {
     if (type) {
@@ -42,6 +47,15 @@ export const Catalogo = () => {
         <p className="text-brand-dark/70 max-w-2xl mx-auto mb-8">
           Descubre nuestra colección de piezas únicas de resina. Todo hecho a mano y con mucho amor.
         </p>
+        <div className="max-w-md mx-auto mb-8">
+          <input 
+            type="text"
+            placeholder="Buscar por nombre o detalle..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-5 py-3 rounded-full border border-brand-pink/50 focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all bg-white shadow-sm text-brand-dark"
+          />
+        </div>
         
         <div className="flex flex-wrap justify-center gap-3">
           <button 
