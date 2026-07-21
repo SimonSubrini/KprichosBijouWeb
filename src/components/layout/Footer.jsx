@@ -24,14 +24,11 @@ export const Footer = () => {
             <a href="https://wa.me/5492984512271" target="_blank" rel="noreferrer" className="text-brand-magenta hover:text-white transition-colors p-2 bg-white hover:bg-brand-magenta rounded-full shadow-sm hover:shadow-md">
               <WhatsappLogo size={24} weight="fill" />
             </a>
-            <a href="mailto:hola@kprichosbijou.com" target="_blank" rel="noreferrer" className="text-brand-magenta hover:text-white transition-colors p-2 bg-white hover:bg-brand-magenta rounded-full shadow-sm hover:shadow-md">
+            <a href="mailto:kprichosbijou@gmail.com" target="_blank" rel="noreferrer" className="text-brand-magenta hover:text-white transition-colors p-2 bg-white hover:bg-brand-magenta rounded-full shadow-sm hover:shadow-md">
               <Envelope size={24} weight="fill" />
             </a>
           </div>
         </div>
-      </div>
-      <div className="container mx-auto px-4 mt-8 pt-6 border-t border-brand-pink/30 text-center text-xs text-brand-dark/50">
-        &copy; {new Date().getFullYear()} Kprichos Bijou. Todos los derechos reservados.
       </div>
     </footer>
   );

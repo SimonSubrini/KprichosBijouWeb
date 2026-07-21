@@ -1,3 +1,6 @@
 {
-  "name": "kprichos-bijou-web"
+  "name": "kprichos-bijou-web",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

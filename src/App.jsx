@@ -31,10 +31,10 @@ const Home = () => (
     </div>
 
     <div className="flex flex-col sm:flex-row gap-5 justify-center mt-8 w-full sm:w-auto px-4">
-      <Link to="/catalogo" className="w-full sm:w-auto">
+      <Link to="/productos" className="w-full sm:w-auto">
         <Button variant="primary" size="lg" className="w-full">Explorar Catálogo</Button>
       </Link>
-      <Link to="/catalogo?type=custom" className="w-full sm:w-auto">
+      <Link to="/productos?type=custom" className="w-full sm:w-auto">
         <Button variant="outline" size="lg" className="w-full">Ver Personalizados</Button>
       </Link>
     </div>
@@ -47,7 +47,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/productos" element={<Catalogo />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/nosotros" element={<div className="py-20 text-center"><h2 className="text-3xl font-display text-brand-magenta mb-4">Sobre Nosotros</h2><p>Conoce más de Kprichos Bijou.</p></div>} />
         </Routes>

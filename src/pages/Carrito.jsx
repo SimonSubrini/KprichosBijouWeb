@@ -110,9 +110,13 @@ export const Carrito = () => {
           
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-pink/20 h-fit sticky top-24">
             <h3 className="text-xl font-bold font-display text-brand-dark mb-5">Resumen de Compra</h3>
-            <div className="flex justify-between text-brand-dark mb-3">
-              <span>Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})</span>
+            <div className="flex justify-between text-brand-dark mb-1">
+              <span>Subtotal (Sin envío)</span>
               <span className="font-medium">${total}</span>
+            </div>
+            <div className="flex justify-between text-brand-dark/70 text-sm mb-3">
+              <span>Precio sin impuestos</span>
+              <span>${(total * 0.79).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-brand-dark/70 text-sm mb-5 pb-5 border-b border-brand-pink/30">
               <span>Envío</span>
