@@ -82,8 +82,28 @@ export const ProductoDetalle = () => {
       return;
     }
 
-    let totalExtraCost = 0;
     const options = product.customizationOptions || [];
+
+    // Validar opciones custom obligatorias
+    for (const opt of options) {
+      const hasExtraCost = opt.extraCost > 0;
+      const val = customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '');
+      
+      if (!val) {
+        alert(`Por favor, completa la opción: ${opt.optionName}`);
+        return;
+      }
+      
+      if (opt.type === 'nested') {
+        const childVal = customValues[opt.childOptionName];
+        if (val !== 'Ninguno / Sin agregados' && !childVal) {
+          alert(`Por favor, completa la opción: ${opt.childOptionName}`);
+          return;
+        }
+      }
+    }
+
+    let totalExtraCost = 0;
     
     // Parse custom values
     let customizationsString = Object.entries(customValues)
@@ -220,7 +240,6 @@ export const ProductoDetalle = () => {
                     <span className="text-brand-magenta">*Requerido</span>
                   </label>
                   <select 
-                    required
                     className="p-3.5 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-brand-dark shadow-sm"
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
@@ -251,7 +270,6 @@ export const ProductoDetalle = () => {
                           </label>
                           <textarea 
                             rows="2"
-                            required
                             className="p-3 bg-brand-light/20 border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark resize-none"
                             placeholder="Escribe aquí los detalles..."
                             value={customValues[opt.optionName] || ''}
@@ -283,7 +301,6 @@ export const ProductoDetalle = () => {
                             {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                           </label>
                           <CustomDropdown 
-                            required
                             options={optionsArr}
                             value={selectedVal}
                             onChange={(val) => handleCustomChange(opt.optionName, val)}
@@ -321,7 +338,6 @@ export const ProductoDetalle = () => {
                               {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                             </label>
                             <CustomDropdown 
-                              required
                               options={parentOptions}
                               value={selectedParent}
                               onChange={(val) => {
@@ -338,7 +354,6 @@ export const ProductoDetalle = () => {
                                 {opt.childOptionName}
                               </label>
                               <CustomDropdown 
-                                required
                                 options={[{value: '', label: 'Seleccionar...'}, ...childOptions]}
                                 value={customValues[opt.childOptionName] || ''}
                                 onChange={(val) => handleCustomChange(opt.childOptionName, val)}
@@ -359,7 +374,6 @@ export const ProductoDetalle = () => {
                           {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                         </label>
                         <select 
-                          required
                           className="p-3 bg-brand-light/20 border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"
                           value={customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '')}
                           onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}

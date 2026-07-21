@@ -44,3 +44,5 @@
 [x] En mensaje de whatsapp cambiar "Total estimado" por "Total (sin envio)" para que no se preste a confusion.
 [x] En "/carrito" debemos hacer mas ancho el panel de la derecha. Ahora, cuando debemos completar los campos de envio quedan lugares muy chicos. En campos como email, queda cortado y no se lee bien.
 [x] En "/productos" Cambiar el boton "Elegir modelo" por "Perzonalizar" (ya que en definitiva primero se elije un modelo y luego se lo puede personalizar).
+[x] En "/carrito" cuando se retira por domicilio: 1) colocar "Retiro en domicilio del vendedor". 2) Eliminar de la cuenta "Costo de envio a coordinar" (ya que no hay envio).
+[x] Asegurarse de que la aplicacion no deje "avanzar" (y ademas notifique) cuando no se hayan completado campos obligatorios. Esto aplica tanto al intentar colocar un producto en el carrito (aca funciona el "no dejar avanzar" pero nunca se notifica al usuario el por que), como para finalizar la compra cuando se selecciono "con envio por correo argentino" (aca colocamos los "*" pero no cumplen su funcion ya que permite avanzar de todas formas).

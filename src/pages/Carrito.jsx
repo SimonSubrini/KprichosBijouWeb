@@ -33,6 +33,30 @@ export const Carrito = () => {
   const finalTotal = total - discount;
 
   const handleCheckout = async () => {
+    if (!shippingMethod) {
+      alert("Por favor, selecciona una opción de envío (Retiro en domicilio o Envío por correo).");
+      return;
+    }
+
+    if (shippingMethod === 'correo') {
+      const requiredFields = [
+        { key: 'name', label: 'Nombre y Apellido' },
+        { key: 'province', label: 'Provincia' },
+        { key: 'city', label: 'Localidad' },
+        { key: 'postalCode', label: 'Código Postal' },
+        { key: 'street', label: 'Calle' },
+        { key: 'number', label: 'Altura' },
+        { key: 'phone', label: 'Teléfono / Celular' },
+        { key: 'email', label: 'Correo Electrónico' }
+      ];
+      for (const field of requiredFields) {
+        if (!formData[field.key].trim()) {
+          alert(`Por favor, completa el campo obligatorio: ${field.label}`);
+          return;
+        }
+      }
+    }
+
     setIsProcessing(true);
     
     // 1. Guardar orden y restar stock en Sanity vía nuestro Backend
@@ -186,7 +210,7 @@ export const Carrito = () => {
                   className="mt-1 accent-brand-magenta"
                 />
                 <div>
-                  <span className="block font-semibold text-brand-dark text-sm">Retiro en Domicilio</span>
+                  <span className="block font-semibold text-brand-dark text-sm">Retiro en domicilio del vendedor</span>
                   <span className="block text-xs text-brand-dark/60 mt-0.5">Allen, Río Negro (Gratis)</span>
                 </div>
               </label>
@@ -267,10 +291,22 @@ export const Carrito = () => {
                 <span>-${discount.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-brand-dark/70 text-sm mb-5 pb-5 border-b border-brand-pink/30">
-              <span>Costo de Envío</span>
-              <span>A coordinar</span>
-            </div>
+            {shippingMethod === 'correo' ? (
+              <div className="flex justify-between text-brand-dark/70 text-sm mb-5 pb-5 border-b border-brand-pink/30">
+                <span>Costo de Envío</span>
+                <span>A coordinar</span>
+              </div>
+            ) : shippingMethod === 'local' ? (
+              <div className="flex justify-between text-brand-dark/70 text-sm mb-5 pb-5 border-b border-brand-pink/30">
+                <span>Costo de Envío</span>
+                <span>Gratis</span>
+              </div>
+            ) : (
+              <div className="flex justify-between text-brand-dark/70 text-sm mb-5 pb-5 border-b border-brand-pink/30">
+                <span>Costo de Envío</span>
+                <span>Pendiente</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-2xl font-display text-brand-dark mb-6">
               <span>Total</span>
               <span className="text-brand-magenta">${finalTotal}</span>
