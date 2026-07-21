@@ -6,8 +6,10 @@ import { Link } from 'react-router-dom';
 
 export const Carrito = () => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { items, removeItem, getCartTotal, updateQuantity, clearCart } = useCartStore();
+  const { items, removeItem, getCartTotal, getCartDiscount, updateQuantity, clearCart } = useCartStore();
   const total = getCartTotal();
+  const discount = getCartDiscount();
+  const finalTotal = total - discount;
 
   const handleCheckout = async () => {
     setIsProcessing(true);
@@ -38,7 +40,11 @@ export const Carrito = () => {
       }
     });
     
-    message += `\n*Total Estimado: $${total}*\n\n`;
+    message += `\n*Subtotal:* $${total}\n`;
+    if (discount > 0) {
+      message += `*Descuento Mayorista:* -$${discount}\n`;
+    }
+    message += `*Total Estimado:* $${finalTotal}\n\n`;
     message += "Quedo a la espera para coordinar el pago y envío. ¡Gracias!";
     
     const encodedMessage = encodeURIComponent(message);
@@ -117,15 +123,21 @@ export const Carrito = () => {
             </div>
             <div className="flex justify-between text-brand-dark/70 text-sm mb-3">
               <span>Precio sin impuestos</span>
-              <span>${(total * 0.79).toFixed(2)}</span>
+              <span>${(finalTotal * 0.79).toFixed(2)}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-brand-magenta font-bold mb-3">
+                <span>Descuento Mayorista</span>
+                <span>-${discount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-brand-dark/70 text-sm mb-5 pb-5 border-b border-brand-pink/30">
               <span>Envío</span>
               <span>A coordinar</span>
             </div>
             <div className="flex justify-between font-bold text-2xl font-display text-brand-dark mb-6">
               <span>Total</span>
-              <span className="text-brand-magenta">${total}</span>
+              <span className="text-brand-magenta">${finalTotal}</span>
             </div>
             <Button variant="primary" className="w-full py-4 text-lg" onClick={handleCheckout} disabled={isProcessing}>
               {isProcessing ? 'Procesando...' : 'Finalizar Compra'}

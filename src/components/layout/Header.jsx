@@ -4,7 +4,10 @@ import { useCartStore } from '../../store/cartStore';
 import { Link } from 'react-router-dom';
 
 export const Header = () => {
-  const items = useCartStore((state) => state.items);
+  const { items, openSidebar } = useCartStore((state) => ({ 
+    items: state.items,
+    openSidebar: state.openSidebar
+  }));
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   return (
@@ -31,14 +34,14 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link to="/carrito" className="relative p-2 text-brand-dark hover:text-brand-magenta transition-colors">
+          <button onClick={openSidebar} className="relative p-2 text-brand-dark hover:text-brand-magenta transition-colors">
             <ShoppingCart size={28} weight="duotone" />
             {itemCount > 0 && (
               <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-brand-magenta rounded-full shadow-sm">
                 {itemCount}
               </span>
             )}
-          </Link>
+          </button>
         </div>
       </div>
     </header>

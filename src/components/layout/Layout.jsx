@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { CartSidebar } from '../ui/CartSidebar';
 
 export const Layout = ({ children }) => {
   return (
@@ -10,6 +11,7 @@ export const Layout = ({ children }) => {
         {children}
       </main>
       <Footer />
+      <CartSidebar />
     </div>
   );
 };

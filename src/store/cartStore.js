@@ -2,6 +2,9 @@ import { create } from 'zustand';
 
 export const useCartStore = create((set, get) => ({
   items: [],
+  isSidebarOpen: false,
+  openSidebar: () => set({ isSidebarOpen: true }),
+  closeSidebar: () => set({ isSidebarOpen: false }),
   addItem: (product, quantity = 1, customizations = null) => {
     set((state) => {
       // Basic implementation for now
@@ -14,10 +17,14 @@ export const useCartStore = create((set, get) => ({
           items: state.items.map((item) =>
             item === existingItem ? { ...item, quantity: item.quantity + quantity } : item
           ),
+          isSidebarOpen: true,
         };
       }
 
-      return { items: [...state.items, { product, quantity, customizations, id: Date.now().toString() }] };
+      return { 
+        items: [...state.items, { product, quantity, customizations, id: Date.now().toString() }],
+        isSidebarOpen: true,
+      };
     });
   },
   removeItem: (itemId) => {
@@ -40,5 +47,15 @@ export const useCartStore = create((set, get) => ({
   clearCart: () => set({ items: [] }),
   getCartTotal: () => {
     return get().items.reduce((total, item) => total + item.product.basePrice * item.quantity, 0);
+  },
+  getCartDiscount: () => {
+    return get().items.reduce((discount, item) => {
+      if (item.quantity >= 20) {
+        return discount + (item.product.basePrice * item.quantity * 0.15);
+      } else if (item.quantity >= 10) {
+        return discount + (item.product.basePrice * item.quantity * 0.10);
+      }
+      return discount;
+    }, 0);
   },
 }));

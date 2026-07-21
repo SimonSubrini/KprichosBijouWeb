@@ -17,7 +17,7 @@ export const SobreNosotros = () => {
         </p>
         
         <div className="pt-6 border-t border-brand-pink/30 flex justify-center gap-6">
-          <a href="https://instagram.com/kprichos.bijou" target="_blank" rel="noreferrer" className="text-brand-magenta hover:text-brand-dark transition-colors flex flex-col items-center gap-2">
+          <a href="https://www.instagram.com/kprichosbijou" target="_blank" rel="noreferrer" className="text-brand-magenta hover:text-brand-dark transition-colors flex flex-col items-center gap-2">
             <InstagramLogo size={32} weight="fill" />
             <span className="text-sm font-medium">Instagram</span>
           </a>
