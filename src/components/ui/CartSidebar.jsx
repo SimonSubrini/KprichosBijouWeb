@@ -71,9 +71,27 @@ export const CartSidebar = () => {
                         className="text-brand-dark hover:text-brand-magenta w-5 h-5 flex items-center justify-center rounded-full bg-white shadow-sm"
                       ><Plus size={10} weight="bold"/></button>
                     </div>
-                    <span className="font-bold font-display text-brand-magenta text-sm">
-                      ${item.product.basePrice * item.quantity}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      {item.quantity >= 10 ? (
+                        <>
+                          <div className="flex items-center gap-1 mb-0.5">
+                            <span className="text-[10px] text-brand-dark/40 line-through">
+                              ${item.product.basePrice * item.quantity}
+                            </span>
+                            <span className="text-[9px] bg-brand-magenta/10 text-brand-magenta px-1 rounded font-bold">
+                              -{item.quantity >= 20 ? '15%' : '10%'}
+                            </span>
+                          </div>
+                          <span className="font-bold font-display text-brand-magenta text-sm">
+                            ${(item.product.basePrice * item.quantity * (item.quantity >= 20 ? 0.85 : 0.90)).toFixed(2)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-bold font-display text-brand-magenta text-sm">
+                          ${item.product.basePrice * item.quantity}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button 

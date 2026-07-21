@@ -19,7 +19,6 @@
 [x] En la seccion carrito, cuando mostramos el "Subtotal" entre parentesis no pongamos la cantidad de items, pongamos "(Sin envio)", para que quede claro que eso se cobra a parte.
 [x] Abajo del subtotal, colocar "Precio sin impuestos: " y mostrar un 79% del precio total (restando el 21% de iva).
 [x] Si por ejemplo me encuentro en "https://kprichos-bijou-web.vercel.app/catalogo" y hago f5, me da un error 404: not found, y obviamente al borrar el "/catalogo" carga todo con normalidad. Debemos solucionarlo.
-
 [x] Investigar cálculo exacto del precio sin impuestos (dividido 1.21 vs multiplicado por 0.79) para posible corrección futura.
 [x] Ver como manejar esta situacion: por ejemplo, para "Libretas" tengo 3 tamaños (A6, A5 y A4) pero si las pongo como categorias segun la estructura que definimos ahora no podria poner un precio por cada una, y como la personalizacion posterior es igual en las 3, creo que no tiene sentido tener 3 "Productos distintos". Deberiamos crear en Sanity una variable opcional que se llame modelo y que permita, segun el seleccionado, poner un precio u otro.
 [x] Colocar todo en gitignore.
@@ -32,3 +31,14 @@
 [x] En sidebar de carrito: agregar botones de "-" y "+" para modificar la cantidad de unidades de cada producto.
 [x] En sidebar de carrito: mejorar wording, "Continuar compra" y "Seguir comprando" suenan igual.
 [x] En la seccion "/carrito" hacer mas ancho el card de Resumen de compra para que el texto y los precios no se superpongan.
+[x] Hacer que en todos los dropdown las opciones se ordenen alfabeticamente (a excepcion de la opcion custom "Ninguno/Sin agregados"). Ademas, todas las opciones deben tener formato Capital Case.
+[-] Configurar Sanity para poder tener un dropdown que dependa de otro (esto surgio de que por ejemplo tenemos un dropdown "Tipo de fondo" y si eligen "Metalizado" tenemos una lista de colores, si es "pleno" otra y si es "brillante", otra).
+[x] En los cards de productos personalizados, cambiar "Ver detalles" por "Personalizar".
+[-] Para los dropdown de colores, quisiera que al pasar el mouse por encima de cada opcion se mueste un pequeño modal/ventana emergente que siga al mouse y muestre una foto de ese color (no quiero mostrar un recuadro de un color pleno, sino una foto de ese color aplicado en una pieza). Como podriamos implementarlo?
+[-] Revisar como se renderizan las fotos en la web. En general veo que tienen una calidad mucho menor a las imagenes que subi a Sanity.
+[x] Al ingresar a un producto personalizado, hay un label sobre la foto que dice "Hecho a pedido". Quitarlo y dejar las fotos solas.
+[x] La opcion "Ninguno/Sin agregados" solo debe agregarse a los dropdowns que tienen un costo adicional (por ejemplo, en un campo "color", solo debe elegirse uno, no debe existir una opcion "Ninguno"). Para todos los casos en que agreguemos la opcion "Ninguno/Sin agregados", esta debe cargarse por defecto en el dropdown, para que el usuario no tenga que cargarlo manualmente.
+[x] Para el envio por correo, solo estamos pidiendo codigo postal y ciudad, pero debemos recabar toda la informacion que nos pide correo argentino: Nombre y apellido, Provincia, Localidad, Codigo postal, Dirección (Calle, altura, piso, departamento), correo electronico, codigo de area y numero de celular, observacion. A excepcion del campo observacion, todos los campos deben ser obligatorios (si fuera solicitado un envio).
+[x] En "/carrito", en los cards de la izquierda en los qeu veo cada producto, cantidad y precio; en caso de aplicarse un descuento a él, me gustaria ver el precio original tachado y en un color menos intenso, despues un "(-10%)" o "(-15%)" segun corresponda y justo debajo el nuevo precio con el descuento aplciado. Para que el comprador entienda en que productos se aplciaron descuentos.
+[x] En "/carrito" cuando no hay elementos en él, hay un boton que dice "Ir al catalogo" que intenta redireccionar a la seccion "/catalogo" que ya no existe y fue reemplazada por "/producto". Debemos corregirlo, y corregir el boton con un "Ir a productos" (o similar).
+[x] En mensaje de whatsapp cambiar "Total estimado" por "Total (sin envio)" para que no se preste a confucion.

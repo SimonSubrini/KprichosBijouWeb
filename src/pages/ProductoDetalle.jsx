@@ -6,6 +6,11 @@ import { Button } from '../components/ui/Button';
 import { ShoppingCart, CaretLeft, CaretRight, Minus, Plus, ArrowLeft } from '@phosphor-icons/react';
 import { PortableText } from '@portabletext/react';
 
+const capitalize = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 export const ProductoDetalle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -183,11 +188,6 @@ export const ProductoDetalle = () => {
               </div>
             )}
             
-            {product.type === 'custom' && (
-              <span className="absolute top-4 right-4 bg-brand-magenta text-white text-xs uppercase tracking-wider font-bold px-4 py-2 rounded-full shadow-sm">
-                Hecho a pedido
-              </span>
-            )}
           </div>
         </div>
 
@@ -260,7 +260,9 @@ export const ProductoDetalle = () => {
                       );
                     }
 
-                    const choices = opt.choices ? opt.choices.split(',').map(c => c.trim()) : [];
+                    const choices = opt.choices ? opt.choices.split(',').map(c => capitalize(c.trim())).sort() : [];
+                    const hasExtraCost = opt.extraCost > 0;
+
                     return (
                       <div key={i} className="flex flex-col gap-2">
                         <label className="text-sm font-semibold text-brand-dark">
@@ -269,11 +271,11 @@ export const ProductoDetalle = () => {
                         <select 
                           required
                           className="p-3 bg-brand-light/20 border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"
-                          value={customValues[opt.optionName] || ''}
+                          value={customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '')}
                           onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}
                         >
-                          <option value="" disabled>Seleccionar...</option>
-                          <option value="Ninguno / Sin agregados">Ninguno / Sin agregados (+$0)</option>
+                          {!hasExtraCost && <option value="" disabled>Seleccionar...</option>}
+                          {hasExtraCost && <option value="Ninguno / Sin agregados">Ninguno / Sin agregados (+$0)</option>}
                           {choices.map((c, j) => (
                             <option key={j} value={c}>{c}</option>
                           ))}

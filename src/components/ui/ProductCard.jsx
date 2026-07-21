@@ -108,7 +108,7 @@ export const ProductCard = ({ product }) => {
             {!product.hasModels && product.type === 'stock' ? (
               <><ShoppingCart size={18} weight="bold" /> Agregar</>
             ) : (
-              product.hasModels ? 'Elegir Modelo' : 'Ver Detalles'
+              product.hasModels ? 'Elegir Modelo' : 'Personalizar'
             )}
           </Button>
         </div>

@@ -7,8 +7,25 @@ import { Link } from 'react-router-dom';
 export const Carrito = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [shippingMethod, setShippingMethod] = useState('');
-  const [city, setCity] = useState('');
-  const [postalCode, setPostalCode] = useState('');
+  
+  // Formulario Correo Argentino
+  const [formData, setFormData] = useState({
+    name: '',
+    province: '',
+    city: '',
+    postalCode: '',
+    street: '',
+    number: '',
+    floor: '',
+    phone: '',
+    email: '',
+    observation: ''
+  });
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const { items, removeItem, getCartTotal, getCartDiscount, updateQuantity, clearCart } = useCartStore();
   const total = getCartTotal();
@@ -52,13 +69,21 @@ export const Carrito = () => {
 
     if (shippingMethod === 'correo') {
       message += `*Envío:* Correo Argentino\n`;
-      message += `*Ciudad:* ${city}\n`;
-      message += `*C.P.:* ${postalCode}\n\n`;
+      message += `*Nombre:* ${formData.name}\n`;
+      message += `*Provincia:* ${formData.province}\n`;
+      message += `*Localidad:* ${formData.city}\n`;
+      message += `*C.P.:* ${formData.postalCode}\n`;
+      message += `*Dirección:* ${formData.street} ${formData.number} ${formData.floor ? `(Piso/Dpto: ${formData.floor})` : ''}\n`;
+      message += `*Teléfono:* ${formData.phone}\n`;
+      message += `*Email:* ${formData.email}\n`;
+      if (formData.observation) {
+        message += `*Observación:* ${formData.observation}\n`;
+      }
+      message += `\n`;
     } else if (shippingMethod === 'local') {
       message += `*Envío:* Retiro por local (Allen, Río Negro)\n\n`;
     }
-
-    message += "Quedo a la espera para coordinar el pago y envío. ¡Gracias!";
+    message += `*Total (sin envio):* $${finalTotal}\n\n`;
     
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
@@ -76,8 +101,8 @@ export const Carrito = () => {
         <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-brand-pink/20">
           <h3 className="text-2xl font-display text-brand-dark mb-3">Tu carrito está vacío</h3>
           <p className="text-brand-dark/60 mb-6">Aún no has agregado ningún capricho a tu carrito.</p>
-          <Link to="/catalogo">
-            <Button variant="primary">Ir al Catálogo</Button>
+          <Link to="/productos">
+            <Button variant="primary">Ir a Productos</Button>
           </Link>
         </div>
       ) : (
@@ -119,9 +144,28 @@ export const Carrito = () => {
                         className="text-brand-dark hover:text-brand-magenta w-6 h-6 flex items-center justify-center rounded-full bg-white shadow-sm"
                       ><Plus size={12} weight="bold"/></button>
                     </div>
-                    <span className="font-bold font-display text-brand-magenta text-lg whitespace-nowrap shrink-0 text-right ml-4 min-w-[70px]">
-                      ${item.product.basePrice * item.quantity}
-                    </span>
+                    
+                    <div className="flex flex-col items-end ml-4 min-w-[80px]">
+                      {item.quantity >= 10 ? (
+                        <>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-xs text-brand-dark/40 line-through">
+                              ${item.product.basePrice * item.quantity}
+                            </span>
+                            <span className="text-[10px] bg-brand-magenta/10 text-brand-magenta px-1.5 py-0.5 rounded font-bold">
+                              -{item.quantity >= 20 ? '15%' : '10%'}
+                            </span>
+                          </div>
+                          <span className="font-bold font-display text-brand-magenta text-lg whitespace-nowrap">
+                            ${(item.product.basePrice * item.quantity * (item.quantity >= 20 ? 0.85 : 0.90)).toFixed(2)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-bold font-display text-brand-magenta text-lg whitespace-nowrap">
+                          ${item.product.basePrice * item.quantity}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -164,28 +208,46 @@ export const Carrito = () => {
             </div>
 
             {shippingMethod === 'correo' && (
-              <div className="mb-6 space-y-4 p-4 bg-brand-light/20 rounded-xl border border-brand-pink/30 animate-fade-in">
-                <div>
-                  <label className="block text-xs font-semibold text-brand-dark mb-1">Ciudad / Provincia</label>
-                  <input 
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Ej: Neuquén Capital"
-                    className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta"
-                  />
+              <div className="mb-6 space-y-4 p-4 bg-brand-light/20 rounded-xl border border-brand-pink/30 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Nombre y Apellido *</label>
+                  <input type="text" required name="name" value={formData.name} onChange={handleFormChange} placeholder="Ej: Maria Lopez" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-brand-dark mb-1">Código Postal</label>
-                  <input 
-                    type="text"
-                    required
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="Ej: 8300"
-                    className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta"
-                  />
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Provincia *</label>
+                  <input type="text" required name="province" value={formData.province} onChange={handleFormChange} placeholder="Ej: Río Negro" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Localidad *</label>
+                  <input type="text" required name="city" value={formData.city} onChange={handleFormChange} placeholder="Ej: General Roca" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Código Postal *</label>
+                  <input type="text" required name="postalCode" value={formData.postalCode} onChange={handleFormChange} placeholder="Ej: 8332" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Calle *</label>
+                  <input type="text" required name="street" value={formData.street} onChange={handleFormChange} placeholder="Ej: San Martin" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Altura *</label>
+                  <input type="text" required name="number" value={formData.number} onChange={handleFormChange} placeholder="Ej: 1234" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Piso / Depto</label>
+                  <input type="text" name="floor" value={formData.floor} onChange={handleFormChange} placeholder="Ej: 2B" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Teléfono / Celular *</label>
+                  <input type="tel" required name="phone" value={formData.phone} onChange={handleFormChange} placeholder="Ej: +54 9 298 1234567" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Correo Electrónico *</label>
+                  <input type="email" required name="email" value={formData.email} onChange={handleFormChange} placeholder="Ej: correo@ejemplo.com" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Observaciones</label>
+                  <textarea name="observation" value={formData.observation} onChange={handleFormChange} placeholder="Aclaraciones para el envío..." className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta resize-none" rows="2" />
                 </div>
               </div>
             )}
