@@ -4,10 +4,8 @@ import { useCartStore } from '../../store/cartStore';
 import { Link } from 'react-router-dom';
 
 export const Header = () => {
-  const { items, openSidebar } = useCartStore((state) => ({ 
-    items: state.items,
-    openSidebar: state.openSidebar
-  }));
+  const items = useCartStore((state) => state.items);
+  const openSidebar = useCartStore((state) => state.openSidebar);
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   return (
