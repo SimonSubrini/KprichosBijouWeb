@@ -133,10 +133,10 @@ export const ProductoDetalle = () => {
         <ArrowLeft size={20} /> Volver
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
         
         {/* Lado Izquierdo: Galería de imágenes */}
-        <div className="bg-white rounded-3xl p-4 shadow-sm border border-brand-pink/20 relative group h-fit">
+        <div className="lg:col-span-5 w-full max-w-md mx-auto bg-white rounded-3xl p-4 shadow-sm border border-brand-pink/20 relative group h-fit">
           <div className="aspect-square bg-brand-light rounded-2xl overflow-hidden relative">
             {product.imageUrls && product.imageUrls.length > 0 ? (
               <>
@@ -192,7 +192,7 @@ export const ProductoDetalle = () => {
         </div>
 
         {/* Lado Derecho: Detalles y Formulario */}
-        <div className="flex flex-col">
+        <div className="lg:col-span-7 flex flex-col">
           <h1 className="text-3xl lg:text-4xl font-display font-bold text-brand-dark mb-2 leading-tight">
             {product.name}
           </h1>
@@ -308,8 +308,8 @@ export const ProductoDetalle = () => {
               </div>
 
               {/* Add Button */}
-              <Button type="submit" variant="primary" className="flex-1 py-4 text-lg flex items-center justify-center gap-3">
-                <ShoppingCart size={22} weight="bold" />
+              <Button type="submit" variant="primary" className="flex-1 flex items-center justify-center gap-2">
+                <ShoppingCart size={20} weight="bold" />
                 Añadir al Carrito
               </Button>
             </div>
