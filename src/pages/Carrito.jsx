@@ -64,7 +64,11 @@ export const Carrito = () => {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, total })
+        body: JSON.stringify({ 
+          items, 
+          total, 
+          customerInfo: { ...formData, shippingMethod } 
+        })
       });
       const data = await response.json();
       if (!response.ok) {

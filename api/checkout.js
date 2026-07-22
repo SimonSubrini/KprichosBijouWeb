@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { items, total } = req.body;
+  const { items, total, customerInfo } = req.body;
 
   if (!items || items.length === 0) {
     return res.status(400).json({ message: 'No items in cart' });
@@ -35,8 +35,12 @@ export default async function handler(req, res) {
           _ref: item.product._id
         },
         quantity: item.quantity,
-        customizations: item.customizations || ''
-      }))
+        customizations: item.customizations || '',
+        selectedModel: item.product.hasModels && item.customizations ? 
+          item.customizations.split(' | ').find(c => c.startsWith('Modelo:'))?.replace('Modelo: ', '') || null 
+          : null
+      })),
+      customerInfo
     };
 
     await client.create(orderData);
@@ -47,8 +51,21 @@ export default async function handler(req, res) {
 
     for (const item of items) {
       if (item.product.type === 'stock') {
-        transaction.patch(item.product._id, p => p.dec({ stockCount: item.quantity }));
-        hasStockUpdates = true;
+        const modelNameMatch = item.customizations ? item.customizations.match(/Modelo:\s([^|]+)/) : null;
+        const selectedModelName = modelNameMatch ? modelNameMatch[1].trim() : null;
+
+        if (item.product.hasModels && selectedModelName) {
+          // Find the index of the model in the models array
+          const modelIndex = item.product.models.findIndex(m => m.name === selectedModelName);
+          if (modelIndex !== -1) {
+            transaction.patch(item.product._id, p => p.dec({ [`models[${modelIndex}].stockCount`]: item.quantity }));
+            hasStockUpdates = true;
+          }
+        } else {
+          // Standard stock product without models
+          transaction.patch(item.product._id, p => p.dec({ stockCount: item.quantity }));
+          hasStockUpdates = true;
+        }
       }
     }
 

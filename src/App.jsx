@@ -10,6 +10,7 @@ import { PreguntasFrecuentes } from './pages/PreguntasFrecuentes';
 import { Resenas } from './pages/Resenas';
 import { SobreNosotros } from './pages/SobreNosotros';
 import { ProductoDetalle } from './pages/ProductoDetalle';
+import { AdminDashboard } from './pages/AdminDashboard';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center space-y-10 animate-fade-in">
@@ -61,6 +62,7 @@ function App() {
           <Route path="/preguntas" element={<PreguntasFrecuentes />} />
           <Route path="/resenas" element={<Resenas />} />
           <Route path="/sobre-nosotros" element={<SobreNosotros />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </Layout>
     </Router>
