@@ -81,7 +81,8 @@ export const Carrito = () => {
     items.forEach(item => {
       message += `- ${item.quantity}x ${item.product.name} ($${item.product.basePrice * item.quantity})\n`;
       if (item.customizations) {
-        message += `  Personalización: ${item.customizations}\n`;
+        const customList = item.customizations.split(' | ').join('\n    - ');
+        message += `  Personalización:\n    - ${customList}\n`;
       }
     });
     
@@ -89,7 +90,7 @@ export const Carrito = () => {
     if (discount > 0) {
       message += `*Descuento Mayorista:* -$${discount}\n`;
     }
-    message += `*Total Estimado:* $${finalTotal}\n\n`;
+    message += `*Total (sin envío):* $${finalTotal}\n\n`;
 
     if (shippingMethod === 'correo') {
       message += `*Envío:* Correo Argentino\n`;

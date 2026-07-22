@@ -118,7 +118,7 @@ export const CartSidebar = () => {
               </div>
             )}
             <div className="flex justify-between font-bold text-xl font-display text-brand-dark mb-5 border-t border-brand-pink/30 pt-3">
-              <span>Total Estimado</span>
+              <span>Total (sin envío)</span>
               <span className="text-brand-magenta">${finalTotal}</span>
             </div>
             

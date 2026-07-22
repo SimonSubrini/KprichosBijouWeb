@@ -87,6 +87,10 @@ export const ProductoDetalle = () => {
     // Validar opciones custom obligatorias
     for (const opt of options) {
       const hasExtraCost = opt.extraCost > 0;
+      if (opt.type === 'text') {
+        continue;
+      }
+
       const val = customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '');
       
       if (!val) {
@@ -109,12 +113,14 @@ export const ProductoDetalle = () => {
     let customizationsString = Object.entries(customValues)
       .map(([key, value]) => {
         if (!value || value === 'Ninguno / Sin agregados') return null;
+        if (typeof value === 'string' && !value.trim()) return null;
+        
         const optionDef = options.find(opt => opt.optionName === key);
         if (optionDef && optionDef.extraCost) {
           totalExtraCost += optionDef.extraCost;
-          return `${key}: ${value} (+ $${optionDef.extraCost})`;
+          return `${key}: ${value.trim()} (+ $${optionDef.extraCost})`;
         }
-        return `${key}: ${value}`;
+        return `${key}: ${typeof value === 'string' ? value.trim() : value}`;
       })
       .filter(Boolean)
       .join(' | ');
@@ -245,11 +251,14 @@ export const ProductoDetalle = () => {
                     onChange={(e) => setSelectedModel(e.target.value)}
                   >
                     <option value="" disabled>Selecciona un modelo</option>
-                    {product.models.map((m, idx) => (
-                      <option key={idx} value={m.name} disabled={m.stockCount <= 0}>
-                        {m.name} - ${m.price} {m.stockCount <= 0 ? '(Sin stock)' : ''}
-                      </option>
-                    ))}
+                    {product.models.map((m, idx) => {
+                      const isOutOfStock = product.type === 'stock' && m.stockCount <= 0;
+                      return (
+                        <option key={idx} value={m.name} disabled={isOutOfStock}>
+                          {m.name} - ${m.price} {isOutOfStock ? '(Sin stock)' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               )}
