@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { EyeSlash, Eye, Plus, PencilSimple, Image as ImageIcon, CheckCircle, XCircle, Tag, CurrencyCircleDollar } from '@phosphor-icons/react';
 import { compressImageToWebP } from '../../utils/imageCompressor';
+import { CustomizationBuilder } from './CustomizationBuilder';
 
-export const ProductsManager = ({ products, adminHash, onRefresh }) => {
+export const ProductsManager = ({ products = [], accessories = [], adminHash, onRefresh }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
@@ -19,6 +20,7 @@ export const ProductsManager = ({ products, adminHash, onRefresh }) => {
       stockCount: 0,
       models: [],
       images: [],
+      customizationOptions: [],
       isArchived: false
     });
   };
@@ -64,6 +66,7 @@ export const ProductsManager = ({ products, adminHash, onRefresh }) => {
   if (editingProduct) {
     return <ProductEditor 
       product={editingProduct} 
+      accessories={accessories}
       onSave={handleSave} 
       onCancel={() => setEditingProduct(null)} 
       isSubmitting={isSubmitting}
@@ -141,7 +144,7 @@ export const ProductsManager = ({ products, adminHash, onRefresh }) => {
   );
 };
 
-const ProductEditor = ({ product, onSave, onCancel, isSubmitting, adminHash }) => {
+const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitting, adminHash }) => {
   const [formData, setFormData] = useState({ ...product });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -359,21 +362,20 @@ const ProductEditor = ({ product, onSave, onCancel, isSubmitting, adminHash }) =
             </div>
             <p className="text-[10px] text-brand-dark/50">Nota: Al guardar y recargar, las imágenes se procesarán en Sanity. El formato será optimizado a WebP automáticamente.</p>
           </div>
-
-          {/* Opciones Avanzadas (Aviso) */}
-          {formData.type === 'custom' && (
-            <div className="bg-orange-50 p-6 rounded-2xl border border-orange-200">
-              <h4 className="font-bold text-lg text-orange-800 mb-2">Personalización</h4>
-              <p className="text-sm text-orange-700 mb-3">
-                Este producto tiene <strong>{formData.customizationOptions?.length || 0}</strong> opciones de personalización configuradas.
-              </p>
-              <p className="text-xs text-orange-600/80 bg-orange-100/50 p-3 rounded-lg">
-                Para editar la estructura compleja de formularios anidados (colores, letras, textos, etc.), actualmente se requiere usar Sanity Studio. El editor completo de opciones se implementará en una fase posterior.
-              </p>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Sección Completa de Personalización para Productos A Pedido */}
+      {formData.type === 'custom' && (
+        <div className="mt-8 bg-white p-6 rounded-3xl border border-brand-pink/30 shadow-sm">
+          <CustomizationBuilder 
+            options={formData.customizationOptions || []}
+            onChange={(newOptions) => setFormData(prev => ({ ...prev, customizationOptions: newOptions }))}
+            accessories={accessories}
+            adminHash={adminHash}
+          />
+        </div>
+      )}
     </div>
   );
 };

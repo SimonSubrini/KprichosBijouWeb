@@ -8,6 +8,25 @@ const client = createClient({
   token: process.env.SANITY_API_TOKEN,
 });
 
+// Helper para limpiar campos virtuales de lectura (urls de imágenes o expansiones de consulta GROQ) antes de guardar en Sanity
+function cleanSanityData(data) {
+  if (Array.isArray(data)) {
+    return data.map(item => cleanSanityData(item));
+  }
+  if (data !== null && typeof data === 'object') {
+    const cleaned = { ...data };
+    delete cleaned.imageUrl;
+    delete cleaned.imageUrls;
+    delete cleaned.accessoryRefId;
+    
+    for (const key in cleaned) {
+      cleaned[key] = cleanSanityData(cleaned[key]);
+    }
+    return cleaned;
+  }
+  return data;
+}
+
 export default async function handler(req, res) {
   const authHeader = req.headers.authorization;
   if (!authHeader || authHeader !== process.env.ADMIN_PASSWORD_HASH) {
@@ -16,10 +35,34 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      // Obtener todo el inventario (incluyendo archivados para el panel admin)
+      // Obtener todo el inventario, enriquecido con URLs de fotos para vista previa en el editor Admin
       const query = `{
-        "products": *[_type == "product"] | order(_createdAt desc),
-        "accessories": *[_type == "accessory"] | order(_createdAt desc)
+        "products": *[_type == "product"] | order(_createdAt desc) {
+          ...,
+          "imageUrls": images[].asset->url,
+          customizationOptions[]{
+            ...,
+            listOptions[]{
+              ...,
+              "imageUrl": image.asset->url
+            },
+            nestedOptions[]{
+              ...,
+              childChoices[]{
+                ...,
+                "imageUrl": image.asset->url
+              }
+            },
+            "accessoryRefId": accessoryReference._ref
+          }
+        },
+        "accessories": *[_type == "accessory"] | order(_createdAt desc) {
+          ...,
+          options[]{
+            ...,
+            "imageUrl": image.asset->url
+          }
+        }
       }`;
       const data = await client.fetch(query);
       return res.status(200).json(data);
@@ -30,9 +73,11 @@ export default async function handler(req, res) {
       const { _type, ...documentData } = req.body;
       if (!_type) return res.status(400).json({ message: 'Missing _type' });
       
+      const cleanedData = cleanSanityData(documentData);
+      
       const newDoc = await client.create({
         _type,
-        ...documentData,
+        ...cleanedData,
         isArchived: false
       });
       return res.status(201).json({ success: true, document: newDoc });
@@ -49,7 +94,9 @@ export default async function handler(req, res) {
       delete updates._updatedAt;
       delete updates._rev;
 
-      const updatedDoc = await client.patch(_id).set(updates).commit();
+      const cleanedUpdates = cleanSanityData(updates);
+
+      const updatedDoc = await client.patch(_id).set(cleanedUpdates).commit();
       return res.status(200).json({ success: true, document: updatedDoc });
     }
 
