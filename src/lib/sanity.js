@@ -95,3 +95,13 @@ export const fetchProductById = async (id) => {
   }`;
   return await sanityClient.fetch(query, { id });
 };
+
+export const fetchStoreSettings = async () => {
+  const query = `*[_id == "storeSettings" || _type == "storeSettings"][0]{
+    customOrdersSuspended,
+    suspensionMessage
+  }`;
+  const result = await sanityClient.fetch(query);
+  return result || { customOrdersSuspended: false, suspensionMessage: '' };
+};
+

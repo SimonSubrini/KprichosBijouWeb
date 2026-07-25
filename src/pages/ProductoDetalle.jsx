@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchProductById } from '../lib/sanity';
 import { useCartStore } from '../store/cartStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { Button } from '../components/ui/Button';
 import { CustomDropdown } from '../components/ui/CustomDropdown';
-import { ShoppingCart, CaretLeft, CaretRight, Minus, Plus, ArrowLeft } from '@phosphor-icons/react';
+import { ShoppingCart, CaretLeft, CaretRight, Minus, Plus, ArrowLeft, WarningCircle, HandPalm } from '@phosphor-icons/react';
 import { PortableText } from '@portabletext/react';
 
 const capitalize = (str) => {
@@ -26,6 +27,7 @@ export const ProductoDetalle = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const addItem = useCartStore((state) => state.addItem);
+  const { customOrdersSuspended, suspensionMessage } = useSettingsStore();
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -79,6 +81,11 @@ export const ProductoDetalle = () => {
   const handleAddToCart = (e) => {
     e.preventDefault();
     
+    if (product.type === 'custom' && customOrdersSuspended) {
+      alert(suspensionMessage || "De momento no se están tomando pedidos personalizados. ¡Gracias por la comprensión!");
+      return;
+    }
+
     // Validar modelo si es obligatorio
     if (product.hasModels && !selectedModel) {
       alert("Por favor, selecciona un modelo/tamaño.");
@@ -287,6 +294,18 @@ export const ProductoDetalle = () => {
           <div className="text-2xl lg:text-3xl font-display font-bold text-brand-magenta mb-6">
             {displayPrice}
           </div>
+
+          {product.type === 'custom' && customOrdersSuspended && (
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-5 mb-6 text-brand-dark shadow-sm animate-fade-in">
+              <div className="flex items-center gap-3 font-display font-bold text-lg text-amber-900 mb-2">
+                <WarningCircle size={28} weight="fill" className="text-amber-600 flex-shrink-0" />
+                <span>Pedidos Personalizados Temporalmente Suspendidos</span>
+              </div>
+              <p className="text-sm md:text-base text-brand-dark/80 leading-relaxed sm:pl-10">
+                {suspensionMessage || 'De momento no se están tomando pedidos personalizados debido a saturación temporal en nuestro taller artesanal.'}
+              </p>
+            </div>
+          )}
 
           {/* Renderizado de Descripción Larga (Sanity Portable Text / String) */}
           {product.longDescription && (
@@ -520,14 +539,15 @@ export const ProductoDetalle = () => {
                 <button 
                   type="button"
                   onClick={() => quantity > 1 && setQuantity(q => q - 1)}
-                  disabled={quantity <= 1}
-                  className={`p-1 rounded-full transition-colors ${quantity <= 1 ? 'text-gray-300' : 'text-brand-dark hover:text-brand-magenta'}`}
+                  disabled={quantity <= 1 || (product.type === 'custom' && customOrdersSuspended)}
+                  className={`p-1 rounded-full transition-colors ${quantity <= 1 || (product.type === 'custom' && customOrdersSuspended) ? 'text-gray-300 cursor-not-allowed' : 'text-brand-dark hover:text-brand-magenta'}`}
                 >
                   <Minus size={20} weight="bold" />
                 </button>
                 <span className="font-bold text-lg w-10 text-center">{quantity}</span>
                 <button 
                   type="button"
+                  disabled={product.type === 'custom' && customOrdersSuspended}
                   onClick={() => {
                     if (quantity < currentMaxAllowed) {
                       setQuantity(q => q + 1);
@@ -535,16 +555,30 @@ export const ProductoDetalle = () => {
                       alert("No hay más stock disponible para este producto o uno de sus accesorios.");
                     }
                   }}
-                  className="p-1 rounded-full text-brand-dark hover:text-brand-magenta transition-colors"
+                  className={`p-1 rounded-full transition-colors ${product.type === 'custom' && customOrdersSuspended ? 'text-gray-300 cursor-not-allowed' : 'text-brand-dark hover:text-brand-magenta'}`}
                 >
                   <Plus size={20} weight="bold" />
                 </button>
               </div>
 
               {/* Add Button */}
-              <Button type="submit" variant="primary" className="flex-1 flex items-center justify-center gap-2">
-                <ShoppingCart size={20} weight="bold" />
-                Añadir al Carrito
+              <Button 
+                type="submit" 
+                variant="primary" 
+                disabled={product.type === 'custom' && customOrdersSuspended}
+                className={`flex-1 flex items-center justify-center gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'bg-amber-600 hover:bg-amber-600 opacity-90 cursor-not-allowed' : ''}`}
+              >
+                {product.type === 'custom' && customOrdersSuspended ? (
+                  <>
+                    <HandPalm size={22} weight="fill" />
+                    <span>Pedidos Personalizados Suspendidos</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart size={20} weight="bold" />
+                    <span>Añadir al Carrito</span>
+                  </>
+                )}
               </Button>
             </div>
             

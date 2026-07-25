@@ -1,11 +1,13 @@
 import React from 'react';
 import { useCartStore } from '../../store/cartStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { Button } from './Button';
-import { X, Trash, ShoppingCart, Minus, Plus } from '@phosphor-icons/react';
+import { X, Trash, ShoppingCart, Minus, Plus, WarningCircle } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const CartSidebar = () => {
   const { items, isSidebarOpen, closeSidebar, removeItem, getCartTotal, getCartDiscount, updateQuantity } = useCartStore();
+  const { customOrdersSuspended } = useSettingsStore();
   const navigate = useNavigate();
 
   if (!isSidebarOpen) return null;
@@ -13,6 +15,8 @@ export const CartSidebar = () => {
   const total = getCartTotal();
   const discount = getCartDiscount();
   const finalTotal = total - discount;
+
+  const hasBlockedCustomItems = customOrdersSuspended && items.some(i => i.product?.type === 'custom');
 
   const handleCheckoutClick = () => {
     closeSidebar();
@@ -46,8 +50,10 @@ export const CartSidebar = () => {
               <p>Tu carrito está vacío</p>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.id} className="flex gap-4 p-3 bg-white rounded-xl border border-brand-pink/20 shadow-sm relative pr-10">
+            items.map((item) => {
+              const isBlockedCustom = customOrdersSuspended && item.product?.type === 'custom';
+              return (
+              <div key={item.id} className={`flex gap-4 p-3 rounded-xl border shadow-sm relative pr-10 ${isBlockedCustom ? 'bg-amber-50/90 border-amber-400' : 'bg-white border-brand-pink/20'}`}>
                 <div className="w-16 h-16 bg-brand-light rounded-lg overflow-hidden flex-shrink-0">
                   {item.product.imageUrls && item.product.imageUrls.length > 0 ? (
                     <img src={item.product.imageUrls[0]} alt={item.product.name} className="w-full h-full object-cover" />
@@ -56,7 +62,14 @@ export const CartSidebar = () => {
                   )}
                 </div>
                 <div className="flex flex-col flex-grow justify-center">
-                  <h4 className="font-bold text-brand-dark text-sm leading-tight line-clamp-1">{item.product.name}</h4>
+                  <h4 className="font-bold text-brand-dark text-sm leading-tight line-clamp-1 flex items-center gap-1">
+                    {item.product.name}
+                  </h4>
+                  {isBlockedCustom && (
+                    <span className="text-[10px] font-bold text-amber-900 bg-amber-200 px-1.5 py-0.5 rounded w-fit my-0.5 flex items-center gap-0.5">
+                      <WarningCircle size={12} weight="fill" /> Suspendido momentáneamente
+                    </span>
+                  )}
                   <p className="text-xs text-brand-dark/60 mb-1 leading-tight line-clamp-1">{item.customizations || 'Sin personalización'}</p>
                   <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-2 bg-brand-light/50 rounded-full border border-brand-pink/30 px-1.5 py-0.5">
@@ -108,12 +121,19 @@ export const CartSidebar = () => {
                   <Trash size={18} weight="fill" />
                 </button>
               </div>
-            ))
+              );
+            })
           )}
         </div>
 
         {items.length > 0 && (
           <div className="p-5 border-t border-brand-pink/30 bg-brand-light/30">
+            {hasBlockedCustomItems && (
+              <div className="p-3 mb-3 bg-amber-100 border border-amber-300 rounded-xl text-xs text-amber-900 font-medium flex items-center gap-2">
+                <WarningCircle size={20} weight="fill" className="text-amber-700 flex-shrink-0" />
+                <span>Tienes ítems personalizados suspendidos. Elimínalos en el carrito para comprar tus productos en stock.</span>
+              </div>
+            )}
             <div className="flex justify-between text-brand-dark mb-2 text-sm">
               <span>Subtotal</span>
               <span className="font-medium">${total}</span>

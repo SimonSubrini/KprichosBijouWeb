@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { hashPassword } from '../utils/hash';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
+import { SuspensionManager } from '../components/admin/SuspensionManager';
 import { LockKey, SignOut, Eye, CheckCircle, Clock, Truck, XCircle, CurrencyCircleDollar, Package } from '@phosphor-icons/react';
 
 const STATUS_CONFIG = {
@@ -139,6 +140,8 @@ export const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-brand-light/20 pb-20">
       <div className="max-w-7xl mx-auto px-4 mt-8">
+        <SuspensionManager adminHash={adminHash} />
+        
         {isLoading && orders.length === 0 ? (
           <div className="text-center py-20 text-brand-dark/50">Cargando órdenes...</div>
         ) : (
