@@ -18,12 +18,8 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // Obtener todo el inventario (incluyendo archivados para el panel admin)
       const query = `{
-        "products": *[_type == "product"] | order(_createdAt desc) {
-          ...,
-          category->{_id, name}
-        },
-        "accessories": *[_type == "accessory"] | order(_createdAt desc),
-        "categories": *[_type == "category"] | order(_createdAt desc)
+        "products": *[_type == "product"] | order(_createdAt desc),
+        "accessories": *[_type == "accessory"] | order(_createdAt desc)
       }`;
       const data = await client.fetch(query);
       return res.status(200).json(data);

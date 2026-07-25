@@ -3,7 +3,7 @@ import { Button } from '../ui/Button';
 import { EyeSlash, Eye, Plus, PencilSimple, Image as ImageIcon, CheckCircle, XCircle, Tag, CurrencyCircleDollar } from '@phosphor-icons/react';
 import { compressImageToWebP } from '../../utils/imageCompressor';
 
-export const ProductsManager = ({ products, categories, adminHash, onRefresh }) => {
+export const ProductsManager = ({ products, adminHash, onRefresh }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
@@ -19,8 +19,7 @@ export const ProductsManager = ({ products, categories, adminHash, onRefresh }) 
       stockCount: 0,
       models: [],
       images: [],
-      isArchived: false,
-      category: null
+      isArchived: false
     });
   };
 
@@ -65,7 +64,6 @@ export const ProductsManager = ({ products, categories, adminHash, onRefresh }) 
   if (editingProduct) {
     return <ProductEditor 
       product={editingProduct} 
-      categories={categories}
       onSave={handleSave} 
       onCancel={() => setEditingProduct(null)} 
       isSubmitting={isSubmitting}
@@ -114,11 +112,6 @@ export const ProductsManager = ({ products, categories, adminHash, onRefresh }) 
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand-magenta bg-brand-magenta/10 px-2 py-0.5 rounded-md mr-2">
                     {product.type === 'custom' ? 'A Pedido' : 'Stock'}
                   </span>
-                  {product.category && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/50 bg-brand-light px-2 py-0.5 rounded-md">
-                      {product.category.name}
-                    </span>
-                  )}
                 </div>
                 <h4 className={`font-display font-bold text-lg mb-1 leading-tight ${product.isArchived ? 'text-gray-500' : 'text-brand-dark'}`}>
                   {product.name}
@@ -148,11 +141,8 @@ export const ProductsManager = ({ products, categories, adminHash, onRefresh }) 
   );
 };
 
-const ProductEditor = ({ product, categories, onSave, onCancel, isSubmitting, adminHash }) => {
-  const [formData, setFormData] = useState({
-    ...product,
-    category: product.category ? { _type: 'reference', _ref: product.category._id } : null
-  });
+const ProductEditor = ({ product, onSave, onCancel, isSubmitting, adminHash }) => {
+  const [formData, setFormData] = useState({ ...product });
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleChange = (e) => {
@@ -160,14 +150,6 @@ const ProductEditor = ({ product, categories, onSave, onCancel, isSubmitting, ad
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
-    }));
-  };
-
-  const handleCategoryChange = (e) => {
-    const val = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      category: val ? { _type: 'reference', _ref: val } : null
     }));
   };
 
@@ -265,18 +247,6 @@ const ProductEditor = ({ product, categories, onSave, onCancel, isSubmitting, ad
                   className="w-full p-3 rounded-xl border border-brand-pink/40 focus:outline-none focus:border-brand-magenta"
                   placeholder="Ej. Llavero Inicial Resina"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-brand-dark/70 mb-1">Categoría</label>
-                <select 
-                  value={formData.category?._ref || ''} 
-                  onChange={handleCategoryChange}
-                  className="w-full p-3 rounded-xl border border-brand-pink/40 focus:outline-none focus:border-brand-magenta"
-                >
-                  <option value="">Sin Categoría</option>
-                  {categories.map(c => !c.isArchived && <option key={c._id} value={c._id}>{c.name}</option>)}
-                </select>
               </div>
 
               <div>

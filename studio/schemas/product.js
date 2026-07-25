@@ -15,12 +15,6 @@ export default {
       description: 'Breve descripción que se muestra en la tarjeta del producto.'
     },
     {
-      name: 'category',
-      title: 'Categoría',
-      type: 'reference',
-      to: [{ type: 'category' }]
-    },
-    {
       name: 'isArchived',
       title: 'Archivado (Oculto)',
       type: 'boolean',

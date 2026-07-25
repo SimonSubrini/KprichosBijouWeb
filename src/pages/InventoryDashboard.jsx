@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { Navigate } from 'react-router-dom';
-import { Tag, Package, PlusCircle, ArrowLeft } from '@phosphor-icons/react';
-import { CategoriesManager } from '../components/admin/CategoriesManager';
+import { Package, PlusCircle } from '@phosphor-icons/react';
 import { AccessoriesManager } from '../components/admin/AccessoriesManager';
 import { ProductsManager } from '../components/admin/ProductsManager';
 
 export const InventoryDashboard = () => {
   const { isAuthenticated, adminHash } = useAuthStore();
   const [activeTab, setActiveTab] = useState('products');
-  const [data, setData] = useState({ products: [], accessories: [], categories: [] });
+  const [data, setData] = useState({ products: [], accessories: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchInventory = async () => {
@@ -42,8 +41,7 @@ export const InventoryDashboard = () => {
 
   const tabs = [
     { id: 'products', label: 'Productos', icon: Package },
-    { id: 'accessories', label: 'Accesorios', icon: PlusCircle },
-    { id: 'categories', label: 'Categorías', icon: Tag },
+    { id: 'accessories', label: 'Accesorios', icon: PlusCircle }
   ];
 
   return (
@@ -72,13 +70,6 @@ export const InventoryDashboard = () => {
           </div>
         ) : (
           <div className="bg-white rounded-3xl shadow-sm border border-brand-pink/20 p-6">
-            {activeTab === 'categories' && (
-              <CategoriesManager 
-                categories={data.categories} 
-                adminHash={adminHash} 
-                onRefresh={fetchInventory} 
-              />
-            )}
             {activeTab === 'accessories' && (
               <AccessoriesManager 
                 accessories={data.accessories} 
@@ -89,7 +80,6 @@ export const InventoryDashboard = () => {
             {activeTab === 'products' && (
               <ProductsManager 
                 products={data.products} 
-                categories={data.categories}
                 accessories={data.accessories}
                 adminHash={adminHash} 
                 onRefresh={fetchInventory} 
