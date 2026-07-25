@@ -24,7 +24,23 @@ export default {
             { name: 'product', title: 'Producto', type: 'reference', to: [{ type: 'product' }] },
             { name: 'quantity', title: 'Cantidad', type: 'number' },
             { name: 'customizations', title: 'Personalizaciones Elegidas', type: 'string' },
-            { name: 'selectedModel', title: 'Modelo Elegido (Si aplica)', type: 'string' }
+            { name: 'selectedModel', title: 'Modelo Elegido (Si aplica)', type: 'string' },
+            {
+              name: 'accessorySelections',
+              title: 'Accesorios Seleccionados (Estructurado)',
+              type: 'array',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    { name: 'accessoryId', type: 'string' },
+                    { name: 'optionValue', type: 'string' },
+                    { name: 'optionKey', type: 'string' },
+                    { name: 'stockType', type: 'string' }
+                  ]
+                }
+              ]
+            }
           ]
         }
       ]

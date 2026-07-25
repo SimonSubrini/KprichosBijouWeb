@@ -67,7 +67,14 @@ export const CartSidebar = () => {
                       ><Minus size={10} weight="bold"/></button>
                       <span className="font-medium text-xs min-w-[16px] text-center">{item.quantity}</span>
                       <button 
-                        onClick={() => updateQuantity(item.id, 1)}
+                        onClick={() => {
+                          const maxAllowed = item.product.maxAllowed ?? Infinity;
+                          if (item.quantity < maxAllowed) {
+                            updateQuantity(item.id, 1);
+                          } else {
+                            alert("No hay más stock disponible para este producto o uno de sus accesorios.");
+                          }
+                        }}
                         className="text-brand-dark hover:text-brand-magenta w-5 h-5 flex items-center justify-center rounded-full bg-white shadow-sm"
                       ><Plus size={10} weight="bold"/></button>
                     </div>

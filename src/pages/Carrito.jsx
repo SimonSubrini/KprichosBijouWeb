@@ -169,7 +169,14 @@ export const Carrito = () => {
                       ><Minus size={12} weight="bold"/></button>
                       <span className="font-medium text-sm min-w-[20px] text-center">{item.quantity}</span>
                       <button 
-                        onClick={() => updateQuantity(item.id, 1)}
+                        onClick={() => {
+                          const maxAllowed = item.product.maxAllowed ?? Infinity;
+                          if (item.quantity < maxAllowed) {
+                            updateQuantity(item.id, 1);
+                          } else {
+                            alert("No hay más stock disponible para este producto o uno de sus accesorios.");
+                          }
+                        }}
                         className="text-brand-dark hover:text-brand-magenta w-6 h-6 flex items-center justify-center rounded-full bg-white shadow-sm"
                       ><Plus size={12} weight="bold"/></button>
                     </div>

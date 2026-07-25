@@ -23,6 +23,18 @@ export const fetchProducts = async () => {
         ...,
         "imageUrl": image.asset->url
       },
+      accessoryReference->{
+        _id,
+        name,
+        stockType,
+        options[]{
+          _key,
+          value,
+          stockCount,
+          isAvailable,
+          "imageUrl": image.asset->url
+        }
+      },
       nestedOptions[]{
         ...,
         childChoices[]{
@@ -52,6 +64,18 @@ export const fetchProductById = async (id) => {
       listOptions[]{
         ...,
         "imageUrl": image.asset->url
+      },
+      accessoryReference->{
+        _id,
+        name,
+        stockType,
+        options[]{
+          _key,
+          value,
+          stockCount,
+          isAvailable,
+          "imageUrl": image.asset->url
+        }
       },
       nestedOptions[]{
         ...,

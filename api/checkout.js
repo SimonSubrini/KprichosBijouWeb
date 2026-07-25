@@ -38,7 +38,15 @@ export default async function handler(req, res) {
         customizations: item.customizations || '',
         selectedModel: item.product.hasModels && item.customizations ? 
           item.customizations.split(' | ').find(c => c.startsWith('Modelo:'))?.replace('Modelo: ', '') || null 
-          : null
+          : null,
+        accessorySelections: item.product.accessorySelections?.map(acc => ({
+          _type: 'object',
+          _key: Math.random().toString(36).substring(7),
+          accessoryId: acc.accessoryId,
+          optionValue: acc.optionValue,
+          optionKey: acc.optionKey,
+          stockType: acc.stockType
+        })) || []
       })),
       customerInfo
     };
@@ -65,6 +73,17 @@ export default async function handler(req, res) {
           // Standard stock product without models
           transaction.patch(item.product._id, p => p.dec({ stockCount: item.quantity }));
           hasStockUpdates = true;
+        }
+      }
+
+      // Decrement accessory stock (if finite)
+      if (item.product.accessorySelections && item.product.accessorySelections.length > 0) {
+        for (const acc of item.product.accessorySelections) {
+          if (acc.stockType === 'finite' && acc.optionKey) {
+            const patchKey = `options[_key=="${acc.optionKey}"].stockCount`;
+            transaction.patch(acc.accessoryId, p => p.dec({ [patchKey]: item.quantity }));
+            hasStockUpdates = true;
+          }
         }
       }
     }

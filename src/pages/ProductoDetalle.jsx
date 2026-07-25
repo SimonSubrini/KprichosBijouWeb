@@ -108,6 +108,7 @@ export const ProductoDetalle = () => {
     }
 
     let totalExtraCost = 0;
+    const accessorySelections = [];
     
     // Parse custom values
     let customizationsString = Object.entries(customValues)
@@ -118,6 +119,22 @@ export const ProductoDetalle = () => {
         const optionDef = options.find(opt => opt.optionName === key);
         if (optionDef && optionDef.extraCost) {
           totalExtraCost += optionDef.extraCost;
+        }
+
+        if (optionDef && optionDef.type === 'accessory' && optionDef.accessoryReference) {
+          const accOpt = optionDef.accessoryReference.options?.find(o => o.value === value.trim());
+          if (accOpt) {
+            accessorySelections.push({
+              accessoryId: optionDef.accessoryReference._id,
+              optionValue: accOpt.value,
+              optionKey: accOpt._key,
+              stockCount: accOpt.stockCount,
+              stockType: optionDef.accessoryReference.stockType
+            });
+          }
+        }
+
+        if (optionDef && optionDef.extraCost) {
           return `${key}: ${value.trim()} (+ $${optionDef.extraCost})`;
         }
         return `${key}: ${typeof value === 'string' ? value.trim() : value}`;
@@ -135,9 +152,25 @@ export const ProductoDetalle = () => {
       }
     }
 
+    let maxAllowed = Infinity;
+    if (product.type === 'stock') {
+      if (product.hasModels && selectedModel) {
+        maxAllowed = product.models.find(m => m.name === selectedModel)?.stockCount || Infinity;
+      } else {
+        maxAllowed = product.stockCount;
+      }
+    }
+    accessorySelections.forEach(acc => {
+      if (acc.stockType === 'finite') {
+        maxAllowed = Math.min(maxAllowed, acc.stockCount);
+      }
+    });
+
     const customizedProduct = {
       ...product,
-      basePrice: finalPrice + totalExtraCost
+      basePrice: finalPrice + totalExtraCost,
+      accessorySelections,
+      maxAllowed
     };
 
     addItem(customizedProduct, quantity, customizationsString);
@@ -155,6 +188,26 @@ export const ProductoDetalle = () => {
       displayPrice = `Desde $${Math.min(...product.models.map(m => m.price))}`;
     }
   }
+
+  let currentMaxAllowed = Infinity;
+  if (product.type === 'stock') {
+    if (product.hasModels && selectedModel) {
+      currentMaxAllowed = product.models.find(m => m.name === selectedModel)?.stockCount || Infinity;
+    } else {
+      currentMaxAllowed = product.stockCount;
+    }
+  }
+  options.forEach(opt => {
+    if (opt.type === 'accessory' && opt.accessoryReference) {
+      const val = customValues[opt.optionName];
+      if (val && val !== 'Ninguno / Sin agregados') {
+        const accOpt = opt.accessoryReference.options?.find(o => o.value === val);
+        if (accOpt && opt.accessoryReference.stockType === 'finite') {
+          currentMaxAllowed = Math.min(currentMaxAllowed, accOpt.stockCount);
+        }
+      }
+    }
+  });
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 animate-fade-in">
@@ -248,7 +301,10 @@ export const ProductoDetalle = () => {
                   <select 
                     className="p-3.5 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-brand-dark shadow-sm"
                     value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedModel(e.target.value);
+                      setQuantity(1); // Reset quantity when changing model
+                    }}
                   >
                     <option value="" disabled>Selecciona un modelo</option>
                     {product.models.map((m, idx) => {
@@ -374,6 +430,45 @@ export const ProductoDetalle = () => {
                       );
                     }
 
+                    if (opt.type === 'accessory' && opt.accessoryReference) {
+                      const hasExtraCost = opt.extraCost > 0;
+                      const accGroup = opt.accessoryReference;
+                      const isFinite = accGroup.stockType === 'finite';
+                      
+                      const optionsArr = [];
+                      if (!hasExtraCost) optionsArr.push({ value: '', label: 'Seleccionar...' });
+                      if (hasExtraCost) optionsArr.push({ value: 'Ninguno / Sin agregados', label: `Ninguno / Sin agregados (+$0)` });
+                      
+                      (accGroup.options || []).forEach(lo => {
+                        const outOfStock = isFinite ? lo.stockCount <= 0 : !lo.isAvailable;
+                        optionsArr.push({
+                          value: lo.value,
+                          label: lo.value + (outOfStock ? ' (Sin stock)' : ''),
+                          image: lo.imageUrl,
+                          disabled: outOfStock
+                        });
+                      });
+
+                      const selectedVal = customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '');
+
+                      return (
+                        <div key={i} className="flex flex-col gap-2">
+                          <label className="text-sm font-semibold text-brand-dark">
+                            {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                          </label>
+                          <CustomDropdown 
+                            options={optionsArr}
+                            value={selectedVal}
+                            onChange={(val) => {
+                              handleCustomChange(opt.optionName, val);
+                              setQuantity(1); // Reset quantity when changing accessory to avoid exceeding stock
+                            }}
+                            placeholder="Seleccionar..."
+                          />
+                        </div>
+                      );
+                    }
+
                     const choices = opt.choices ? opt.choices.split(',').map(c => capitalize(c.trim())).sort() : [];
                     const hasExtraCost = opt.extraCost > 0;
 
@@ -415,7 +510,13 @@ export const ProductoDetalle = () => {
                 <span className="font-bold text-lg w-10 text-center">{quantity}</span>
                 <button 
                   type="button"
-                  onClick={() => setQuantity(q => q + 1)}
+                  onClick={() => {
+                    if (quantity < currentMaxAllowed) {
+                      setQuantity(q => q + 1);
+                    } else {
+                      alert("No hay más stock disponible para este producto o uno de sus accesorios.");
+                    }
+                  }}
                   className="p-1 rounded-full text-brand-dark hover:text-brand-magenta transition-colors"
                 >
                   <Plus size={20} weight="bold" />

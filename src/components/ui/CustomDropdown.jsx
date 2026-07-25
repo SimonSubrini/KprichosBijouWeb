@@ -46,15 +46,20 @@ export const CustomDropdown = ({ options, value, onChange, placeholder, disabled
           {options.map((opt, idx) => (
             <li 
               key={idx}
-              className={`px-4 py-3 hover:bg-brand-light/40 cursor-pointer text-sm text-brand-dark flex items-center gap-3 transition-colors ${value === opt.value ? 'bg-brand-light/20 font-medium' : ''}`}
+              className={`px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
+                opt.disabled 
+                  ? 'text-gray-400 bg-gray-50 cursor-not-allowed line-through decoration-gray-400 opacity-60' 
+                  : 'text-brand-dark cursor-pointer hover:bg-brand-light/40'
+              } ${value === opt.value ? 'bg-brand-light/20 font-medium' : ''}`}
               onClick={() => {
+                if (opt.disabled) return;
                 onChange(opt.value);
                 setIsOpen(false);
                 setHoverImage(null);
               }}
-              onMouseEnter={() => setHoverImage(opt.image)}
-              onMouseLeave={() => setHoverImage(null)}
-              onMouseMove={handleMouseMove}
+              onMouseEnter={() => !opt.disabled && setHoverImage(opt.image)}
+              onMouseLeave={() => !opt.disabled && setHoverImage(null)}
+              onMouseMove={(e) => !opt.disabled && handleMouseMove(e)}
             >
               {opt.image && <img src={`${opt.image}?w=50&auto=format&fit=crop`} alt="" className="w-6 h-6 rounded-full object-cover shadow-sm border border-brand-pink/20" />}
               <span>{opt.label || opt.value}</span>

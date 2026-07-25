@@ -38,6 +38,7 @@ export default async function handler(req, res) {
         items[]{
           quantity,
           selectedModel,
+          accessorySelections,
           product->{
             _id,
             type,
@@ -58,6 +59,16 @@ export default async function handler(req, res) {
               }
             } else {
               transaction.patch(item.product._id, p => p.inc({ stockCount: item.quantity }));
+            }
+          }
+
+          // Restore accessory stock
+          if (item.accessorySelections && item.accessorySelections.length > 0) {
+            for (const acc of item.accessorySelections) {
+              if (acc.stockType === 'finite' && acc.optionKey) {
+                const patchKey = `options[_key=="${acc.optionKey}"].stockCount`;
+                transaction.patch(acc.accessoryId, p => p.inc({ [patchKey]: item.quantity }));
+              }
             }
           }
         }

@@ -91,7 +91,8 @@ export default {
                   { title: 'Lista Simple (Select)', value: 'list' },
                   { title: 'Texto Libre (Input)', value: 'text' },
                   { title: 'Lista con Imágenes (Tooltips)', value: 'listImages' },
-                  { title: 'Dropdown Anidado (Dependiente)', value: 'nested' }
+                  { title: 'Dropdown Anidado (Dependiente)', value: 'nested' },
+                  { title: 'Accesorio (Desde Base de Datos)', value: 'accessory' }
                 ],
                 layout: 'radio'
               },
@@ -145,6 +146,13 @@ export default {
                 ]
               }],
               hidden: ({parent}) => parent?.type !== 'nested'
+            },
+            {
+              name: 'accessoryReference',
+              title: 'Grupo de Accesorios',
+              type: 'reference',
+              to: [{ type: 'accessory' }],
+              hidden: ({parent}) => parent?.type !== 'accessory'
             },
             { name: 'extraCost', title: 'Costo Adicional General (Opcional)', type: 'number' }
           ]
