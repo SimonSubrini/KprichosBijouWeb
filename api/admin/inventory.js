@@ -27,6 +27,20 @@ function cleanSanityData(data) {
   return data;
 }
 
+// Helper para transformar texto plano de descripción larga a bloques PortableText de Sanity (si venía como string)
+function formatLongDescription(data) {
+  if (typeof data.longDescription === 'string' && data.longDescription.trim() !== '') {
+    data.longDescription = data.longDescription.split('\n\n').map(paragraph => ({
+      _type: 'block',
+      style: 'normal',
+      children: [{ _type: 'span', text: paragraph }]
+    }));
+  } else if (data.longDescription === '') {
+    data.longDescription = null;
+  }
+  return data;
+}
+
 export default async function handler(req, res) {
   const authHeader = req.headers.authorization;
   if (!authHeader || authHeader !== process.env.ADMIN_PASSWORD_HASH) {
@@ -35,11 +49,15 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      // Obtener todo el inventario, enriquecido con URLs de fotos para vista previa en el editor Admin
+      // Obtener todo el inventario no borrado semipermanentemente, enriquecido con URLs de fotos
       const query = `{
-        "products": *[_type == "product"] | order(_createdAt desc) {
+        "products": *[_type == "product" && coalesce(isDeleted, false) == false] | order(_createdAt desc) {
           ...,
           "imageUrls": images[].asset->url,
+          models[]{
+            ...,
+            "imageUrl": image.asset->url
+          },
           customizationOptions[]{
             ...,
             listOptions[]{
@@ -56,7 +74,7 @@ export default async function handler(req, res) {
             "accessoryRefId": accessoryReference._ref
           }
         },
-        "accessories": *[_type == "accessory"] | order(_createdAt desc) {
+        "accessories": *[_type == "accessory" && coalesce(isDeleted, false) == false] | order(_createdAt desc) {
           ...,
           options[]{
             ...,
@@ -73,12 +91,13 @@ export default async function handler(req, res) {
       const { _type, ...documentData } = req.body;
       if (!_type) return res.status(400).json({ message: 'Missing _type' });
       
-      const cleanedData = cleanSanityData(documentData);
+      const cleanedData = formatLongDescription(cleanSanityData(documentData));
       
       const newDoc = await client.create({
         _type,
         ...cleanedData,
-        isArchived: false
+        isArchived: false,
+        isDeleted: false
       });
       return res.status(201).json({ success: true, document: newDoc });
     }
@@ -94,18 +113,18 @@ export default async function handler(req, res) {
       delete updates._updatedAt;
       delete updates._rev;
 
-      const cleanedUpdates = cleanSanityData(updates);
+      const cleanedUpdates = formatLongDescription(cleanSanityData(updates));
 
       const updatedDoc = await client.patch(_id).set(cleanedUpdates).commit();
       return res.status(200).json({ success: true, document: updatedDoc });
     }
 
     if (req.method === 'DELETE') {
-      // Soft Delete (Archivar)
+      // Borrado semipermanente (ocultar para admin y tienda públicas, pero sin destruir historial de órdenes)
       const { _id } = req.query;
       if (!_id) return res.status(400).json({ message: 'Missing _id' });
 
-      const updatedDoc = await client.patch(_id).set({ isArchived: true }).commit();
+      const updatedDoc = await client.patch(_id).set({ isDeleted: true, isArchived: true }).commit();
       return res.status(200).json({ success: true, document: updatedDoc });
     }
 

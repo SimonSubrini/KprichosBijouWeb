@@ -21,6 +21,7 @@ export const ProductoDetalle = () => {
   // States for customization
   const [customValues, setCustomValues] = useState({});
   const [selectedModel, setSelectedModel] = useState('');
+  const [modelOverrideImage, setModelOverrideImage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -58,12 +59,14 @@ export const ProductoDetalle = () => {
   }
 
   const nextImage = () => {
+    setModelOverrideImage(null);
     if (product.imageUrls) {
       setCurrentImageIndex((prev) => (prev + 1) % product.imageUrls.length);
     }
   };
 
   const prevImage = () => {
+    setModelOverrideImage(null);
     if (product.imageUrls) {
       setCurrentImageIndex((prev) => (prev - 1 + product.imageUrls.length) % product.imageUrls.length);
     }
@@ -170,7 +173,8 @@ export const ProductoDetalle = () => {
       ...product,
       basePrice: finalPrice + totalExtraCost,
       accessorySelections,
-      maxAllowed
+      maxAllowed,
+      imageUrls: modelOverrideImage ? [modelOverrideImage, ...(product.imageUrls || [])] : product.imageUrls
     };
 
     addItem(customizedProduct, quantity, customizationsString);
@@ -223,15 +227,15 @@ export const ProductoDetalle = () => {
         {/* Lado Izquierdo: Galería de imágenes */}
         <div className="lg:col-span-5 w-full max-w-md mx-auto bg-white rounded-3xl p-4 shadow-sm border border-brand-pink/20 relative group h-fit">
           <div className="aspect-square bg-brand-light rounded-2xl overflow-hidden relative">
-            {product.imageUrls && product.imageUrls.length > 0 ? (
+            {(modelOverrideImage || (product.imageUrls && product.imageUrls.length > 0)) ? (
               <>
                 <img 
-                  src={`${product.imageUrls[currentImageIndex]}?w=1200&auto=format&fit=max`} 
+                  src={`${modelOverrideImage || product.imageUrls[currentImageIndex]}?w=1200&auto=format&fit=max`} 
                   alt={product.name} 
-                  className="object-cover w-full h-full" 
+                  className="object-cover w-full h-full transition-all duration-300" 
                 />
                 
-                {product.imageUrls.length > 1 && (
+                {product.imageUrls && product.imageUrls.length > 1 && (
                   <>
                     <button 
                       type="button"
@@ -254,8 +258,11 @@ export const ProductoDetalle = () => {
                         <button 
                           key={idx}
                           type="button"
-                          onClick={() => setCurrentImageIndex(idx)}
-                          className={`w-2.5 h-2.5 rounded-full transition-colors shadow-sm ${idx === currentImageIndex ? 'bg-brand-magenta' : 'bg-white/70 hover:bg-white'}`}
+                          onClick={() => {
+                            setModelOverrideImage(null);
+                            setCurrentImageIndex(idx);
+                          }}
+                          className={`w-2.5 h-2.5 rounded-full transition-colors shadow-sm ${(!modelOverrideImage && idx === currentImageIndex) ? 'bg-brand-magenta' : 'bg-white/70 hover:bg-white'}`}
                         />
                       ))}
                     </div>
@@ -281,10 +288,14 @@ export const ProductoDetalle = () => {
             {displayPrice}
           </div>
 
-          {/* Renderizado de Descripción Larga (Sanity Portable Text) */}
+          {/* Renderizado de Descripción Larga (Sanity Portable Text / String) */}
           {product.longDescription && (
             <div className="prose prose-sm lg:prose-base prose-pink text-brand-dark/80 mb-8 max-w-none">
-              <PortableText value={product.longDescription} />
+              {typeof product.longDescription === 'string' ? (
+                <p className="whitespace-pre-wrap leading-relaxed">{product.longDescription}</p>
+              ) : (
+                <PortableText value={product.longDescription} />
+              )}
             </div>
           )}
           
@@ -302,8 +313,15 @@ export const ProductoDetalle = () => {
                     className="p-3.5 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-brand-dark shadow-sm"
                     value={selectedModel}
                     onChange={(e) => {
-                      setSelectedModel(e.target.value);
+                      const val = e.target.value;
+                      setSelectedModel(val);
                       setQuantity(1); // Reset quantity when changing model
+                      const chosenModel = product.models.find(m => m.name === val);
+                      if (chosenModel?.imageUrl) {
+                        setModelOverrideImage(chosenModel.imageUrl);
+                      } else {
+                        setModelOverrideImage(null);
+                      }
                     }}
                   >
                     <option value="" disabled>Selecciona un modelo</option>

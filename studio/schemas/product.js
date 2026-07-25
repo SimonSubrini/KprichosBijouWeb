@@ -21,6 +21,12 @@ export default {
       initialValue: false,
     },
     {
+      name: 'isDeleted',
+      title: 'Borrado (Eliminado de UI)',
+      type: 'boolean',
+      initialValue: false,
+    },
+    {
       name: 'longDescription',
       title: 'Descripción Larga',
       type: 'array',
@@ -50,6 +56,7 @@ export default {
             { name: 'name', title: 'Nombre del modelo (ej. Tamaño A4)', type: 'string' },
             { name: 'price', title: 'Precio de este modelo', type: 'number' },
             { name: 'stockCount', title: 'Cantidad en Stock', type: 'number' },
+            { name: 'image', title: 'Imagen del Modelo', type: 'image', options: { hotspot: true } },
           ]
         }
       ],

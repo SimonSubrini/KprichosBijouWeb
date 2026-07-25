@@ -30,6 +30,12 @@ export default {
       initialValue: false,
     },
     {
+      name: 'isDeleted',
+      title: 'Borrado (Eliminado de UI)',
+      type: 'boolean',
+      initialValue: false,
+    },
+    {
       name: 'options',
       title: 'Opciones de Accesorio',
       type: 'array',

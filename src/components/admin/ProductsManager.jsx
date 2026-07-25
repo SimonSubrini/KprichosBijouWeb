@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
-import { EyeSlash, Eye, Plus, PencilSimple, Image as ImageIcon, CheckCircle, XCircle, Tag, CurrencyCircleDollar } from '@phosphor-icons/react';
+import { Trash, Camera, EyeSlash, Eye, Plus, PencilSimple, Image as ImageIcon, CheckCircle, XCircle, Tag, CurrencyCircleDollar } from '@phosphor-icons/react';
 import { compressImageToWebP } from '../../utils/imageCompressor';
 import { CustomizationBuilder } from './CustomizationBuilder';
 
@@ -14,6 +14,7 @@ export const ProductsManager = ({ products = [], accessories = [], adminHash, on
       _type: 'product',
       name: '',
       description: '',
+      longDescription: '',
       type: 'stock',
       hasModels: false,
       basePrice: 0,
@@ -63,6 +64,25 @@ export const ProductsManager = ({ products = [], accessories = [], adminHash, on
     setIsSubmitting(false);
   };
 
+  const handleDelete = async (prod) => {
+    if (!confirm(`¿Estás seguro de que deseas BORRAR el producto "${prod.name}"?\n\nEsta acción eliminará el producto de tu panel y de la tienda (preservando el historial contable de órdenes antiguas).`)) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/inventory?_id=${prod._id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': adminHash }
+      });
+      if (res.ok) {
+        onRefresh();
+      } else {
+        alert("Error al borrar el producto");
+      }
+    } catch (error) {
+      alert("Error de red");
+    }
+    setIsSubmitting(false);
+  };
+
   if (editingProduct) {
     return <ProductEditor 
       product={editingProduct} 
@@ -104,8 +124,11 @@ export const ProductsManager = ({ products = [], accessories = [], adminHash, on
                   <button onClick={() => setEditingProduct(product)} className="p-2 bg-white/90 text-brand-dark hover:text-brand-magenta rounded-lg shadow-sm backdrop-blur-sm transition-colors">
                     <PencilSimple size={18} />
                   </button>
-                  <button onClick={() => handleArchive(product._id, !product.isArchived)} className={`p-2 bg-white/90 shadow-sm backdrop-blur-sm rounded-lg transition-colors ${product.isArchived ? 'text-green-600' : 'text-orange-600'}`}>
+                  <button onClick={() => handleArchive(product._id, !product.isArchived)} title={product.isArchived ? "Mostrar en tienda" : "Ocultar temporalmente de la tienda"} className={`p-2 bg-white/90 shadow-sm backdrop-blur-sm rounded-lg transition-colors ${product.isArchived ? 'text-green-600' : 'text-orange-600'}`}>
                     {product.isArchived ? <Eye size={18} /> : <EyeSlash size={18} />}
+                  </button>
+                  <button onClick={() => handleDelete(product)} title="Borrar del panel" className="p-2 bg-white/90 shadow-sm backdrop-blur-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <Trash size={18} />
                   </button>
                 </div>
               </div>
@@ -145,7 +168,15 @@ export const ProductsManager = ({ products = [], accessories = [], adminHash, on
 };
 
 const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitting, adminHash }) => {
-  const [formData, setFormData] = useState({ ...product });
+  const [formData, setFormData] = useState(() => {
+    const initialLongDesc = Array.isArray(product.longDescription)
+      ? product.longDescription.map(b => b.children?.map?.(c => c.text || '').join('') || '').join('\n\n')
+      : (typeof product.longDescription === 'string' ? product.longDescription : '');
+    return {
+      ...product,
+      longDescription: initialLongDesc
+    };
+  });
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleChange = (e) => {
@@ -222,6 +253,31 @@ const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitti
     }));
   };
 
+  const handleModelImageUpload = async (key, file) => {
+    if (!file) return;
+    try {
+      const compressed = await compressImageToWebP(file, 400, 0.8);
+      const res = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': adminHash },
+        body: JSON.stringify(compressed)
+      });
+      if (res.ok) {
+        const { asset } = await res.json();
+        setFormData(prev => ({
+          ...prev,
+          models: prev.models.map(m => m._key === key ? {
+            ...m,
+            image: { _type: 'image', asset: { _type: 'reference', _ref: asset._id } },
+            imageUrl: compressed.base64
+          } : m)
+        }));
+      }
+    } catch (error) {
+      console.error("Error subiendo foto de modelo:", error);
+    }
+  };
+
   return (
     <div className="animate-fade-in pb-10">
       <div className="flex justify-between items-center mb-6 border-b border-brand-pink/20 pb-4">
@@ -258,6 +314,15 @@ const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitti
                   name="description" value={formData.description} onChange={handleChange} rows={2}
                   className="w-full p-3 rounded-xl border border-brand-pink/40 focus:outline-none focus:border-brand-magenta"
                   placeholder="Se muestra en la tarjeta principal..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-brand-dark/70 mb-1">Descripción Detallada (Larga)</label>
+                <textarea 
+                  name="longDescription" value={formData.longDescription || ''} onChange={handleChange} rows={5}
+                  className="w-full p-3 rounded-xl border border-brand-pink/40 focus:outline-none focus:border-brand-magenta"
+                  placeholder="Se muestra al entrar a ver la página individual del producto. Ideal para materiales, medidas, tiempos y cuidados..."
                 />
               </div>
             </div>
@@ -311,8 +376,21 @@ const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitti
                   <Button variant="outline" size="sm" onClick={handleAddModel}><Plus/> Añadir Modelo</Button>
                 </div>
                 {formData.models?.map(model => (
-                  <div key={model._key} className="flex gap-2 p-3 bg-white rounded-xl border border-brand-pink/20 items-end relative">
-                    <div className="flex-grow">
+                  <div key={model._key} className="flex gap-3 p-3 bg-white rounded-xl border border-brand-pink/20 items-center relative flex-wrap sm:flex-nowrap">
+                    <div className="flex-shrink-0">
+                      <label className="cursor-pointer group relative w-11 h-11 rounded-lg border border-dashed border-brand-pink/60 flex items-center justify-center bg-brand-light/20 hover:bg-brand-pink/10 overflow-hidden transition-colors" title="Subir foto de este modelo">
+                        {model.imageUrl ? (
+                          <img src={model.imageUrl} alt={model.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Camera size={20} className="text-brand-dark/50 group-hover:text-brand-magenta" />
+                        )}
+                        <input 
+                          type="file" accept="image/*" className="hidden" 
+                          onChange={(e) => e.target.files?.[0] && handleModelImageUpload(model._key, e.target.files[0])} 
+                        />
+                      </label>
+                    </div>
+                    <div className="flex-grow min-w-[130px]">
                       <label className="block text-[10px] font-bold text-brand-dark/50 uppercase">Nombre</label>
                       <input type="text" value={model.name} onChange={(e) => updateModel(model._key, 'name', e.target.value)} className="w-full p-1 border-b border-brand-pink/40 focus:outline-none" />
                     </div>
@@ -324,7 +402,7 @@ const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitti
                       <label className="block text-[10px] font-bold text-brand-dark/50 uppercase">Stock</label>
                       <input type="number" value={model.stockCount} onChange={(e) => updateModel(model._key, 'stockCount', Number(e.target.value))} className="w-full p-1 border-b border-brand-pink/40 focus:outline-none" />
                     </div>
-                    <button onClick={() => removeModel(model._key)} className="text-red-400 hover:text-red-600 mb-1 ml-1"><XCircle size={20} weight="fill"/></button>
+                    <button onClick={() => removeModel(model._key)} className="text-red-400 hover:text-red-600 ml-1"><XCircle size={20} weight="fill"/></button>
                   </div>
                 ))}
               </div>

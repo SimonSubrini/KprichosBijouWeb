@@ -8,7 +8,7 @@ export const sanityClient = createClient({
 });
 
 export const fetchProducts = async () => {
-  const query = `*[_type == "product" && coalesce(isArchived, false) == false]{
+  const query = `*[_type == "product" && coalesce(isArchived, false) == false && coalesce(isDeleted, false) == false]{
     _id,
     name,
     description,
@@ -16,7 +16,10 @@ export const fetchProducts = async () => {
     type,
     stockCount,
     hasModels,
-    models,
+    models[]{
+      ...,
+      "imageUrl": image.asset->url
+    },
     customizationOptions[]{
       ...,
       listOptions[]{
@@ -49,7 +52,7 @@ export const fetchProducts = async () => {
 };
 
 export const fetchProductById = async (id) => {
-  const query = `*[_type == "product" && _id == $id && coalesce(isArchived, false) == false][0]{
+  const query = `*[_type == "product" && _id == $id && coalesce(isArchived, false) == false && coalesce(isDeleted, false) == false][0]{
     _id,
     name,
     description,
@@ -58,7 +61,10 @@ export const fetchProductById = async (id) => {
     type,
     stockCount,
     hasModels,
-    models,
+    models[]{
+      ...,
+      "imageUrl": image.asset->url
+    },
     customizationOptions[]{
       ...,
       listOptions[]{

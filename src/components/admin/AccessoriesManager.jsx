@@ -43,7 +43,7 @@ export const AccessoriesManager = ({ accessories, adminHash, onRefresh }) => {
   };
 
   const handleArchive = async (_id, isArchived) => {
-    if (!confirm(`¿Estás seguro de ${isArchived ? 'archivar' : 'restaurar'} este accesorio?`)) return;
+    if (!confirm(`¿Estás seguro de ${isArchived ? 'archivar (ocultar de la tienda)' : 'restaurar'} este accesorio?`)) return;
     setIsSubmitting(true);
     try {
       await fetch('/api/admin/inventory', {
@@ -53,6 +53,25 @@ export const AccessoriesManager = ({ accessories, adminHash, onRefresh }) => {
       });
       onRefresh();
     } catch (error) {}
+    setIsSubmitting(false);
+  };
+
+  const handleDelete = async (acc) => {
+    if (!confirm(`¿Estás seguro de que deseas BORRAR el grupo de accesorios "${acc.name}"?\n\nEsta acción eliminará el accesorio de tu panel y de la tienda (preservando el historial contable de órdenes antiguas).`)) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/inventory?_id=${acc._id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': adminHash }
+      });
+      if (res.ok) {
+        onRefresh();
+      } else {
+        alert("Error al borrar el accesorio");
+      }
+    } catch (error) {
+      alert("Error de red");
+    }
     setIsSubmitting(false);
   };
 
@@ -91,11 +110,14 @@ export const AccessoriesManager = ({ accessories, adminHash, onRefresh }) => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setEditingAcc(acc)} className="p-2 bg-brand-light/40 text-brand-dark hover:text-brand-magenta rounded-lg transition-colors">
+                  <button onClick={() => setEditingAcc(acc)} title="Editar" className="p-2 bg-brand-light/40 text-brand-dark hover:text-brand-magenta rounded-lg transition-colors">
                     <PencilSimple size={18} />
                   </button>
-                  <button onClick={() => handleArchive(acc._id, !acc.isArchived)} className={`p-2 rounded-lg transition-colors ${acc.isArchived ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                  <button onClick={() => handleArchive(acc._id, !acc.isArchived)} title={acc.isArchived ? "Mostrar en tienda" : "Ocultar temporalmente de la tienda"} className={`p-2 rounded-lg transition-colors ${acc.isArchived ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
                     {acc.isArchived ? <Eye size={18} /> : <EyeSlash size={18} />}
+                  </button>
+                  <button onClick={() => handleDelete(acc)} title="Borrar del panel" className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors">
+                    <Trash size={18} />
                   </button>
                 </div>
               </div>
