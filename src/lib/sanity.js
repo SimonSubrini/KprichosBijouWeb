@@ -8,9 +8,10 @@ export const sanityClient = createClient({
 });
 
 export const fetchProducts = async () => {
-  const query = `*[_type == "product"]{
+  const query = `*[_type == "product" && coalesce(isArchived, false) == false]{
     _id,
     name,
+    category->{_id, name},
     description,
     basePrice,
     type,
@@ -49,9 +50,10 @@ export const fetchProducts = async () => {
 };
 
 export const fetchProductById = async (id) => {
-  const query = `*[_type == "product" && _id == $id][0]{
+  const query = `*[_type == "product" && _id == $id && coalesce(isArchived, false) == false][0]{
     _id,
     name,
+    category->{_id, name},
     description,
     longDescription,
     basePrice,

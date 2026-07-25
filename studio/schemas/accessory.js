@@ -16,12 +16,18 @@ export default {
       options: {
         list: [
           { title: 'Finito (Cantidades específicas)', value: 'finite' },
-          { title: 'Infinito / No cuantificable (Hay / No Hay)', value: 'infinite' }
+          { title: 'Infinito / No cuantificable (Ej. Tintas)', value: 'infinite' }
         ],
         layout: 'radio'
       },
       initialValue: 'finite',
       validation: Rule => Rule.required()
+    },
+    {
+      name: 'isArchived',
+      title: 'Archivado (Oculto)',
+      type: 'boolean',
+      initialValue: false,
     },
     {
       name: 'options',

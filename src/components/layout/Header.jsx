@@ -1,9 +1,13 @@
 import React from 'react';
-import { ShoppingCart, List } from '@phosphor-icons/react';
+import { ShoppingCart, List, SignOut } from '@phosphor-icons/react';
 import { useCartStore } from '../../store/cartStore';
-import { Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export const Header = () => {
+  const { isAuthenticated, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
   const items = useCartStore((state) => state.items);
   const openSidebar = useCartStore((state) => state.openSidebar);
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
@@ -21,26 +25,42 @@ export const Header = () => {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-6 font-medium text-brand-dark text-sm lg:text-base">
-          <Link to="/" className="hover:text-brand-magenta transition-colors">Inicio</Link>
-          <Link to="/productos" className="hover:text-brand-magenta transition-colors">Productos</Link>
-          <Link to="/envios" className="hover:text-brand-magenta transition-colors">Envíos</Link>
-          <Link to="/como-comprar" className="hover:text-brand-magenta transition-colors">¿Cómo compro?</Link>
-          <Link to="/sobre-nosotros" className="hover:text-brand-magenta transition-colors">Sobre Nosotros</Link>
-          <Link to="/preguntas" className="hover:text-brand-magenta transition-colors">FAQ</Link>
-          <Link to="/resenas" className="hover:text-brand-magenta transition-colors">Reseñas</Link>
-        </nav>
+        {isAuthenticated ? (
+          <>
+            <nav className="hidden md:flex items-center gap-6 font-medium text-brand-dark text-sm lg:text-base">
+              <Link to="/admin" className={`hover:text-brand-magenta transition-colors ${location.pathname === '/admin' ? 'text-brand-magenta font-bold' : ''}`}>Órdenes</Link>
+              <Link to="/admin/stock" className={`hover:text-brand-magenta transition-colors ${location.pathname === '/admin/stock' ? 'text-brand-magenta font-bold' : ''}`}>Stock</Link>
+            </nav>
+            <div className="flex items-center gap-4">
+              <button onClick={() => { logout(); navigate('/'); }} className="flex items-center gap-2 p-2 text-brand-dark hover:text-brand-magenta transition-colors font-medium">
+                <SignOut size={24} /> <span className="hidden sm:inline">Cerrar Sesión</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <nav className="hidden md:flex items-center gap-6 font-medium text-brand-dark text-sm lg:text-base">
+              <Link to="/" className="hover:text-brand-magenta transition-colors">Inicio</Link>
+              <Link to="/productos" className="hover:text-brand-magenta transition-colors">Productos</Link>
+              <Link to="/envios" className="hover:text-brand-magenta transition-colors">Envíos</Link>
+              <Link to="/como-comprar" className="hover:text-brand-magenta transition-colors">¿Cómo compro?</Link>
+              <Link to="/sobre-nosotros" className="hover:text-brand-magenta transition-colors">Sobre Nosotros</Link>
+              <Link to="/preguntas" className="hover:text-brand-magenta transition-colors">FAQ</Link>
+              <Link to="/resenas" className="hover:text-brand-magenta transition-colors">Reseñas</Link>
+            </nav>
 
-        <div className="flex items-center gap-4">
-          <button onClick={openSidebar} className="relative p-2 text-brand-dark hover:text-brand-magenta transition-colors">
-            <ShoppingCart size={28} weight="duotone" />
-            {itemCount > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-brand-magenta rounded-full shadow-sm">
-                {itemCount}
-              </span>
-            )}
-          </button>
-        </div>
+            <div className="flex items-center gap-4">
+              <button onClick={openSidebar} className="relative p-2 text-brand-dark hover:text-brand-magenta transition-colors">
+                <ShoppingCart size={28} weight="duotone" />
+                {itemCount > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-brand-magenta rounded-full shadow-sm">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </header>
   );

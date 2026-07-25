@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { hashPassword } from '../utils/hash';
+import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
 import { LockKey, SignOut, Eye, CheckCircle, Clock, Truck, XCircle, CurrencyCircleDollar, Package } from '@phosphor-icons/react';
 
@@ -19,7 +20,7 @@ const PAYMENT_CONFIG = {
 };
 
 export const AdminDashboard = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, adminHash, login, logout } = useAuthStore();
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -32,11 +33,10 @@ export const AdminDashboard = () => {
 
   // Comprobar sesión al cargar
   useEffect(() => {
-    const storedHash = sessionStorage.getItem('adminHash');
-    if (storedHash) {
-      fetchOrders(storedHash);
+    if (adminHash) {
+      fetchOrders(adminHash);
     }
-  }, []);
+  }, [adminHash]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -52,8 +52,7 @@ export const AdminDashboard = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('adminHash');
-    setIsAuthenticated(false);
+    logout();
     setOrders([]);
     setPassword('');
   };
@@ -67,12 +66,10 @@ export const AdminDashboard = () => {
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
-        setIsAuthenticated(true);
-        sessionStorage.setItem('adminHash', hash);
+        login(hash);
         setLoginError('');
       } else {
-        sessionStorage.removeItem('adminHash');
-        setIsAuthenticated(false);
+        logout();
         setLoginError('Contraseña incorrecta');
       }
     } catch (error) {
@@ -84,12 +81,11 @@ export const AdminDashboard = () => {
   const handleUpdateOrder = async (orderId, updates) => {
     setIsUpdating(true);
     try {
-      const hash = sessionStorage.getItem('adminHash');
       const res = await fetch('/api/admin/update-order', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': hash 
+          'Authorization': adminHash 
         },
         body: JSON.stringify({ orderId, ...updates })
       });
@@ -142,18 +138,6 @@ export const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-brand-light/20 pb-20">
-      <div className="bg-white border-b border-brand-pink/20 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-bold text-brand-dark">Dashboard</h1>
-            <span className="bg-brand-magenta/10 text-brand-magenta text-xs font-bold px-2 py-1 rounded-lg">Admin</span>
-          </div>
-          <button onClick={handleLogout} className="flex items-center gap-2 text-brand-dark/60 hover:text-brand-magenta font-medium transition-colors">
-            <SignOut size={20} /> <span className="hidden sm:inline">Cerrar Sesión</span>
-          </button>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 mt-8">
         {isLoading && orders.length === 0 ? (
           <div className="text-center py-20 text-brand-dark/50">Cargando órdenes...</div>
