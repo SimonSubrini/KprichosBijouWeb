@@ -32,14 +32,25 @@ export const AdminDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Helper para convertir fecha a formato YYYY-MM-DD en huso horario local sin problemas de salto de día en UTC
+  const getLocalYMD = (dateVal) => {
+    if (!dateVal) return '';
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Valores por defecto (Ítem 63: último mes y estados activos no cancelados ni enviados)
   const getDefaultDates = () => {
     const today = new Date();
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
     return {
-      start: lastMonth.toISOString().split('T')[0],
-      end: today.toISOString().split('T')[0]
+      start: getLocalYMD(lastMonth),
+      end: getLocalYMD(today)
     };
   };
   const defaultDates = getDefaultDates();
@@ -60,13 +71,14 @@ export const AdminDashboard = () => {
     if (selectedStatuses.length > 0 && !selectedStatuses.includes(order.status)) {
       return false;
     }
-    if (startDate) {
-      const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
-      if (orderDate < startDate) return false;
+    const orderDateVal = order.createdAt || order._createdAt;
+    const orderYMD = getLocalYMD(orderDateVal);
+
+    if (startDate && orderYMD < startDate) {
+      return false;
     }
-    if (endDate) {
-      const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
-      if (orderDate > endDate) return false;
+    if (endDate && orderYMD > endDate) {
+      return false;
     }
     return true;
   });
@@ -76,8 +88,8 @@ export const AdminDashboard = () => {
     let valA, valB;
     switch (sortField) {
       case 'createdAt':
-        valA = new Date(a.createdAt || 0).getTime();
-        valB = new Date(b.createdAt || 0).getTime();
+        valA = new Date(a.createdAt || a._createdAt || 0).getTime();
+        valB = new Date(b.createdAt || b._createdAt || 0).getTime();
         break;
       case 'client':
         valA = (a.customerInfo?.name || '').toLowerCase();
@@ -96,8 +108,8 @@ export const AdminDashboard = () => {
         valB = b.totalPrice || 0;
         break;
       default:
-        valA = new Date(a.createdAt || 0).getTime();
-        valB = new Date(b.createdAt || 0).getTime();
+        valA = new Date(a.createdAt || a._createdAt || 0).getTime();
+        valB = new Date(b.createdAt || b._createdAt || 0).getTime();
     }
     if (sortDirection === 'asc') {
       return valA > valB ? 1 : (valA < valB ? -1 : 0);
@@ -429,7 +441,8 @@ export const AdminDashboard = () => {
                   {sortedOrders.map(order => {
                     const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['pendiente_contacto'];
                     const payment = PAYMENT_CONFIG[order.paymentStatus] || PAYMENT_CONFIG['pendiente'];
-                    const date = new Date(order.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    const orderDateVal = order.createdAt || order._createdAt;
+                    const date = orderDateVal ? new Date(orderDateVal).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Sin fecha';
                     
                     return (
                       <tr key={order._id} className="border-b border-brand-pink/10 hover:bg-brand-light/30 transition-colors">
@@ -483,7 +496,7 @@ export const AdminDashboard = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-display font-bold text-brand-dark">Orden {selectedOrder.orderId}</h2>
-                  <p className="text-sm text-brand-dark/60">{new Date(selectedOrder.createdAt).toLocaleString('es-AR')}</p>
+                  <p className="text-sm text-brand-dark/60">{(selectedOrder.createdAt || selectedOrder._createdAt) ? new Date(selectedOrder.createdAt || selectedOrder._createdAt).toLocaleString('es-AR') : 'Sin fecha'}</p>
                 </div>
                 <button onClick={() => setSelectedOrder(null)} className="md:hidden text-brand-dark/50 hover:text-brand-magenta">
                   <XCircle size={28} weight="fill" />

@@ -19,10 +19,11 @@ export default async function handler(req, res) {
   });
 
   try {
-    const query = `*[_type == "order"] | order(createdAt desc) {
+    const query = `*[_type == "order"] | order(coalesce(createdAt, _createdAt) desc) {
       _id,
       orderId,
       createdAt,
+      _createdAt,
       status,
       paymentStatus,
       amountPaid,
