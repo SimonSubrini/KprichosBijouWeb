@@ -200,7 +200,12 @@ export const AdminDashboard = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        // Normalizar órdenes creadas con el estado anterior 'pendiente' hacia 'pendiente_contacto'
+        const normalizedData = data.map(order => ({
+          ...order,
+          status: order.status === 'pendiente' ? 'pendiente_contacto' : order.status
+        }));
+        setOrders(normalizedData);
         login(token);
         setLoginError('');
       } else {
@@ -522,10 +527,10 @@ export const AdminDashboard = () => {
                     </p>
                   )}
                 </div>
-                {selectedOrder.customerInfo?.notes && (
+                {(selectedOrder.customerInfo?.observation || selectedOrder.customerInfo?.notes) && (
                   <div className="col-span-2">
-                    <h4 className="text-xs font-bold text-brand-dark/50 uppercase tracking-wider mb-1">Notas</h4>
-                    <p className="text-sm text-brand-dark italic bg-white p-2 rounded border border-brand-pink/20">"{selectedOrder.customerInfo.notes}"</p>
+                    <h4 className="text-xs font-bold text-brand-dark/50 uppercase tracking-wider mb-1">Observaciones</h4>
+                    <p className="text-sm text-brand-dark italic bg-white p-2 rounded border border-brand-pink/20">"{selectedOrder.customerInfo.observation || selectedOrder.customerInfo.notes}"</p>
                   </div>
                 )}
               </div>

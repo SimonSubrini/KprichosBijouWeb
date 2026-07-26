@@ -54,11 +54,15 @@ export default {
         { name: 'phone', title: 'Teléfono', type: 'string' },
         { name: 'email', title: 'Email', type: 'string' },
         { name: 'shippingMethod', title: 'Método de Envío', type: 'string' },
-        { name: 'address', title: 'Dirección (Si es envío)', type: 'string' },
+        { name: 'street', title: 'Calle', type: 'string' },
+        { name: 'number', title: 'Altura', type: 'string' },
+        { name: 'floor', title: 'Piso / Dpto', type: 'string' },
+        { name: 'address', title: 'Dirección general (Legacy)', type: 'string' },
         { name: 'province', title: 'Provincia', type: 'string' },
         { name: 'city', title: 'Localidad', type: 'string' },
         { name: 'postalCode', title: 'Código Postal', type: 'string' },
-        { name: 'notes', title: 'Observaciones', type: 'text' }
+        { name: 'observation', title: 'Observación', type: 'text' },
+        { name: 'notes', title: 'Observaciones (Legacy)', type: 'text' }
       ]
     },
     {

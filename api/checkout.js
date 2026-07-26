@@ -20,13 +20,23 @@ export default async function handler(req, res) {
   });
 
   try {
+    // Limpieza de datos en customerInfo según método de envío
+    const cleanedCustomerInfo = { ...customerInfo };
+    if (cleanedCustomerInfo.shippingMethod === 'local') {
+      ['street', 'number', 'floor', 'province', 'city', 'postalCode', 'address'].forEach(field => {
+        if (cleanedCustomerInfo[field] === '' || cleanedCustomerInfo[field] === undefined) {
+          delete cleanedCustomerInfo[field];
+        }
+      });
+    }
+
     // 1. Create the Order document
     const orderData = {
       _type: 'order',
       orderId: `ORD-${Date.now()}`,
       createdAt: new Date().toISOString(),
       totalPrice: total,
-      status: 'pendiente',
+      status: 'pendiente_contacto',
       items: items.map(item => ({
         _type: 'object',
         _key: item.id || Math.random().toString(36).substring(7),
@@ -48,7 +58,7 @@ export default async function handler(req, res) {
           stockType: acc.stockType
         })) || []
       })),
-      customerInfo
+      customerInfo: cleanedCustomerInfo
     };
 
     await client.create(orderData);
