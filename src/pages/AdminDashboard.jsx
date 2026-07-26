@@ -58,16 +58,16 @@ export const AdminDashboard = () => {
     setPassword('');
   };
 
-  const fetchOrders = async (hash) => {
+  const fetchOrders = async (token = adminHash) => {
     setIsLoading(true);
     try {
       const res = await fetch('/api/admin/orders', {
-        headers: { 'Authorization': hash }
+        headers: { 'Authorization': token }
       });
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
-        login(hash);
+        login(token);
         setLoginError('');
       } else {
         logout();
@@ -92,16 +92,18 @@ export const AdminDashboard = () => {
       });
       if (res.ok) {
         // Refrescar órdenes
-        await fetchOrders(hash);
+        await fetchOrders(adminHash);
         // Actualizar la orden seleccionada localmente si el modal está abierto
         if (selectedOrder && selectedOrder._id === orderId) {
           setSelectedOrder(prev => ({ ...prev, ...updates }));
         }
       } else {
-        alert("Error al actualizar la orden.");
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Error al actualizar la orden: ${errorData.message || res.statusText || 'Desconocido'}`);
       }
     } catch (error) {
-      alert("Error de red al actualizar.");
+      console.error('Error al actualizar la orden:', error);
+      alert("Error al actualizar la orden: " + (error.message || 'Error de red'));
     }
     setIsUpdating(false);
   };
