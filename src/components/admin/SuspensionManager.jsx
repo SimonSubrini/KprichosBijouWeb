@@ -68,10 +68,10 @@ export const SuspensionManager = ({ adminHash }) => {
   };
 
   return (
-    <div className={`mb-8 p-6 rounded-3xl border transition-all shadow-sm ${isSuspended ? 'bg-amber-50/90 border-amber-300' : 'bg-green-50/70 border-green-200'}`}>
+    <div className={`mb-8 p-6 rounded-3xl border transition-all shadow-sm ${isSuspended ? 'bg-brand-light/60 border-brand-pink' : 'bg-green-50/70 border-green-200'}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3">
-          <div className={`p-3 rounded-2xl ${isSuspended ? 'bg-amber-500 text-white shadow-sm shadow-amber-200' : 'bg-green-600 text-white shadow-sm shadow-green-200'}`}>
+          <div className={`p-3 rounded-2xl ${isSuspended ? 'bg-brand-magenta text-white shadow-sm shadow-pink-200' : 'bg-green-600 text-white shadow-sm shadow-green-200'}`}>
             {isSuspended ? <HandPalm size={26} weight="fill" /> : <CheckCircle size={26} weight="fill" />}
           </div>
           <div>
@@ -91,7 +91,7 @@ export const SuspensionManager = ({ adminHash }) => {
           onClick={() => setIsSuspended(!isSuspended)}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold transition-all border shadow-sm ${
             isSuspended 
-              ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600' 
+              ? 'bg-brand-magenta hover:bg-brand-magenta/90 text-white border-brand-magenta' 
               : 'bg-white hover:bg-gray-50 text-brand-dark border-gray-300'
           }`}
         >
@@ -110,9 +110,9 @@ export const SuspensionManager = ({ adminHash }) => {
       </div>
 
       {isSuspended && (
-        <div className="mt-4 pt-4 border-t border-amber-200/80 animate-fade-in">
-          <label className="block text-sm font-bold text-amber-900 mb-2 flex items-center gap-2">
-            <WarningCircle size={18} weight="bold" className="text-amber-700" />
+        <div className="mt-4 pt-4 border-t border-brand-pink/50 animate-fade-in">
+          <label className="block text-sm font-bold text-brand-dark mb-2 flex items-center gap-2">
+            <WarningCircle size={18} weight="bold" className="text-brand-magenta" />
             Mensaje explicativo para el comprador (Visible al entrar a la web y en los productos personalizados):
           </label>
           <textarea
@@ -120,7 +120,7 @@ export const SuspensionManager = ({ adminHash }) => {
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
             placeholder="Ej: De momento no se están tomando pedidos personalizados debido a alta demanda en nuestro taller artesanal. Reabriremos agenda a partir del 15 de agosto. ¡Gracias por la paciencia!"
-            className="w-full p-3 bg-white border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-brand-dark text-sm shadow-inner"
+            className="w-full p-3 bg-white border border-brand-pink/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta text-brand-dark text-sm shadow-inner"
           />
         </div>
       )}

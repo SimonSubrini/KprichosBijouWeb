@@ -23,7 +23,7 @@ export const SuspensionModal = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border-4 border-amber-300 relative text-center transform animate-scale-up">
+      <div className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border-4 border-brand-magenta relative text-center transform animate-scale-up">
         <button 
           onClick={dismissModal}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-brand-dark rounded-full hover:bg-gray-100 transition-colors"
@@ -32,7 +32,7 @@ export const SuspensionModal = () => {
           <X size={22} weight="bold" />
         </button>
 
-        <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+        <div className="w-16 h-16 bg-brand-magenta/15 text-brand-magenta rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
           <WarningCircle size={40} weight="fill" />
         </div>
 
@@ -40,7 +40,7 @@ export const SuspensionModal = () => {
           Aviso sobre Pedidos Personalizados
         </h3>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 my-4 text-left text-brand-dark/90 leading-relaxed font-normal">
+        <div className="bg-brand-light/40 border border-brand-pink/50 rounded-2xl p-4 my-4 text-left text-brand-dark/90 leading-relaxed font-normal">
           {suspensionMessage || 'De momento no se están tomando pedidos personalizados debido a alta demanda y saturación temporal en nuestro taller artesanal.'}
         </div>
 

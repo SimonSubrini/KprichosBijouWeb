@@ -3,7 +3,7 @@ import { hashPassword } from '../utils/hash';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
 import { SuspensionManager } from '../components/admin/SuspensionManager';
-import { LockKey, SignOut, Eye, CheckCircle, Clock, Truck, XCircle, CurrencyCircleDollar, Package } from '@phosphor-icons/react';
+import { LockKey, SignOut, Eye, CheckCircle, Clock, Truck, XCircle, CurrencyCircleDollar, Package, Funnel, Calendar, CaretDown, Check, ArrowsCounterClockwise, TrendUp, Wallet, ShoppingBag } from '@phosphor-icons/react';
 
 const STATUS_CONFIG = {
   pendiente_contacto: { label: 'Pendiente de contacto', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock },
@@ -31,6 +31,59 @@ export const AdminDashboard = () => {
   
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Filtros de órdenes
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
+  // Filtrado dinámico de órdenes
+  const filteredOrders = orders.filter(order => {
+    if (selectedStatuses.length > 0 && !selectedStatuses.includes(order.status)) {
+      return false;
+    }
+    if (startDate) {
+      const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+      if (orderDate < startDate) return false;
+    }
+    if (endDate) {
+      const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+      if (orderDate > endDate) return false;
+    }
+    return true;
+  });
+
+  // Cálculo de Métricas Financieras sobre filteredOrders
+  const metrics = filteredOrders.reduce((acc, order) => {
+    if (order.status === 'cancelado') return acc;
+    const total = order.totalPrice || 0;
+    let paid = 0;
+    if (order.paymentStatus === 'pagado' && !order.amountPaid) {
+      paid = total;
+    } else {
+      paid = order.amountPaid || 0;
+    }
+    const remaining = Math.max(0, total - paid);
+
+    return {
+      totalRevenue: acc.totalRevenue + paid,
+      pendingRevenue: acc.pendingRevenue + remaining,
+      activeOrdersCount: acc.activeOrdersCount + 1
+    };
+  }, { totalRevenue: 0, pendingRevenue: 0, activeOrdersCount: 0 });
+
+  const toggleStatusSelection = (statusKey) => {
+    setSelectedStatuses(prev => 
+      prev.includes(statusKey) ? prev.filter(s => s !== statusKey) : [...prev, statusKey]
+    );
+  };
+
+  const resetFilters = () => {
+    setSelectedStatuses([]);
+    setStartDate('');
+    setEndDate('');
+  };
 
   // Comprobar sesión al cargar
   useEffect(() => {
@@ -144,6 +197,138 @@ export const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 mt-8">
         <SuspensionManager adminHash={adminHash} />
         
+        {!isLoading && (
+          <>
+            {/* Tarjetas de Métricas de Ingresos */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-pink/20 flex items-center gap-5">
+                <div className="w-14 h-14 bg-green-100 text-green-700 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner">
+                  <TrendUp size={32} weight="duotone" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-brand-dark/50 uppercase tracking-wider">Recaudado hasta el momento</p>
+                  <h4 className="text-3xl font-display font-bold text-green-700 mt-1">${metrics.totalRevenue}</h4>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-pink/20 flex items-center gap-5">
+                <div className="w-14 h-14 bg-brand-magenta/10 text-brand-magenta rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner">
+                  <Wallet size={32} weight="duotone" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-brand-dark/50 uppercase tracking-wider">Por Cobrar (Pendiente / Señas)</p>
+                  <h4 className="text-3xl font-display font-bold text-brand-magenta mt-1">${metrics.pendingRevenue}</h4>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-pink/20 flex items-center gap-5">
+                <div className="w-14 h-14 bg-brand-light/70 text-brand-dark rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner">
+                  <ShoppingBag size={32} weight="duotone" className="text-brand-magenta" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-brand-dark/50 uppercase tracking-wider">Órdenes Mostradas</p>
+                  <h4 className="text-3xl font-display font-bold text-brand-dark mt-1">{filteredOrders.length} <span className="text-xs font-normal text-brand-dark/60 font-sans">({metrics.activeOrdersCount} activas)</span></h4>
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de Filtros */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-pink/20 mb-8 flex flex-col lg:flex-row gap-6 justify-between lg:items-center">
+              <div className="flex flex-wrap items-center gap-4 flex-grow">
+                
+                {/* Combobox Múltiple para Estados */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5 bg-brand-light/30 border border-brand-pink/40 hover:border-brand-magenta rounded-2xl text-sm font-medium text-brand-dark transition-all shadow-sm min-w-[220px]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Funnel size={18} className="text-brand-magenta" />
+                      {selectedStatuses.length === 0 ? (
+                        'Todos los estados'
+                      ) : (
+                        `Filtrando (${selectedStatuses.length} estado${selectedStatuses.length > 1 ? 's' : ''})`
+                      )}
+                    </span>
+                    <CaretDown size={16} className="text-brand-dark/60" />
+                  </button>
+
+                  {isStatusDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setIsStatusDropdownOpen(false)} />
+                      <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-brand-pink/30 z-30 p-3 animate-scale-up">
+                        <div className="flex justify-between items-center pb-2 mb-2 border-b border-brand-pink/20 text-xs font-bold text-brand-dark/70">
+                          <span>SELECCIONAR ESTADOS</span>
+                          <button 
+                            type="button"
+                            onClick={() => setSelectedStatuses(selectedStatuses.length === Object.keys(STATUS_CONFIG).length ? [] : Object.keys(STATUS_CONFIG))}
+                            className="text-brand-magenta hover:underline"
+                          >
+                            {selectedStatuses.length === Object.keys(STATUS_CONFIG).length ? 'Desmarcar todos' : 'Marcar todos'}
+                          </button>
+                        </div>
+                        <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                          {Object.entries(STATUS_CONFIG).map(([key, config]) => {
+                            const isChecked = selectedStatuses.includes(key);
+                            return (
+                              <div
+                                key={key}
+                                onClick={() => toggleStatusSelection(key)}
+                                className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all text-sm ${isChecked ? 'bg-brand-light/60 font-semibold text-brand-dark' : 'hover:bg-brand-light/30 text-brand-dark/80'}`}
+                              >
+                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${isChecked ? 'bg-brand-magenta border-brand-magenta text-white' : 'border-gray-300 bg-white'}`}>
+                                  {isChecked && <Check size={14} weight="bold" />}
+                                </div>
+                                <span className="flex-grow">{config.label}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Filtros de Fecha */}
+                <div className="flex items-center gap-2 bg-brand-light/30 border border-brand-pink/40 rounded-2xl px-4 py-2 text-sm shadow-sm flex-wrap">
+                  <Calendar size={18} className="text-brand-magenta flex-shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-brand-dark/60">Desde:</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-transparent text-brand-dark font-medium focus:outline-none focus:text-brand-magenta text-xs md:text-sm"
+                    />
+                  </div>
+                  <span className="text-brand-pink mx-1">|</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-brand-dark/60">Hasta:</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-transparent text-brand-dark font-medium focus:outline-none focus:text-brand-magenta text-xs md:text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {(selectedStatuses.length > 0 || startDate || endDate) && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="flex items-center gap-2 text-sm text-brand-magenta hover:text-brand-dark font-semibold transition-colors px-3 py-1 bg-brand-pink/10 hover:bg-brand-pink/20 rounded-xl w-fit self-end lg:self-center"
+                >
+                  <ArrowsCounterClockwise size={16} weight="bold" />
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+          </>
+        )}
+
         {isLoading && orders.length === 0 ? (
           <div className="text-center py-20 text-brand-dark/50">Cargando órdenes...</div>
         ) : (
@@ -162,7 +347,7 @@ export const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map(order => {
+                  {filteredOrders.map(order => {
                     const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['pendiente_contacto'];
                     const payment = PAYMENT_CONFIG[order.paymentStatus] || PAYMENT_CONFIG['pendiente'];
                     const date = new Date(order.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -195,9 +380,11 @@ export const AdminDashboard = () => {
                       </tr>
                     );
                   })}
-                  {orders.length === 0 && (
+                  {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan="7" className="p-8 text-center text-brand-dark/50">No hay órdenes registradas.</td>
+                      <td colSpan="7" className="p-8 text-center text-brand-dark/50">
+                        {orders.length === 0 ? 'No hay órdenes registradas.' : 'No se encontraron órdenes con los filtros seleccionados.'}
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -313,7 +500,14 @@ export const AdminDashboard = () => {
                   <select 
                     className="w-full p-2 mb-4 rounded-lg border border-brand-pink/20 bg-brand-light/20 text-sm focus:outline-none"
                     value={selectedOrder.paymentStatus || 'pendiente'}
-                    onChange={(e) => handleUpdateOrder(selectedOrder._id, { paymentStatus: e.target.value })}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      const updates = { paymentStatus: newStatus };
+                      if (newStatus === 'pagado' && (!selectedOrder.amountPaid || selectedOrder.amountPaid < selectedOrder.totalPrice)) {
+                        updates.amountPaid = selectedOrder.totalPrice;
+                      }
+                      handleUpdateOrder(selectedOrder._id, updates);
+                    }}
                     disabled={isUpdating}
                   >
                     {Object.entries(PAYMENT_CONFIG).map(([key, config]) => (

@@ -88,7 +88,7 @@ export const ProductCard = ({ product }) => {
           </div>
         )}
         {product.type === 'custom' && (
-          <span className={`absolute top-3 right-3 text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 ${customOrdersSuspended ? 'bg-amber-600' : 'bg-brand-magenta'}`}>
+          <span className="absolute top-3 right-3 text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 bg-brand-magenta">
             {customOrdersSuspended && <HandPalm size={12} weight="fill" />}
             {customOrdersSuspended ? 'Suspendido Temporalmente' : 'A pedido'}
           </span>
@@ -103,10 +103,10 @@ export const ProductCard = ({ product }) => {
             {displayPrice}
           </span>
           <Button 
-            variant={!product.hasModels && product.type === 'stock' ? 'primary' : (product.type === 'custom' && customOrdersSuspended ? 'outline' : 'outline')} 
+            variant={!product.hasModels && product.type === 'stock' ? 'primary' : 'outline'} 
             size="sm" 
             onClick={handleAddToCart}
-            className={`flex gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'border-amber-500 text-amber-700 hover:bg-amber-500 hover:text-white' : ''}`}
+            className={`flex gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'border-brand-magenta text-brand-magenta hover:bg-brand-magenta hover:text-white' : ''}`}
           >
             {!product.hasModels && product.type === 'stock' ? (
               <><ShoppingCart size={18} weight="bold" /> Agregar</>

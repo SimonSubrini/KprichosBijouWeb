@@ -296,9 +296,9 @@ export const ProductoDetalle = () => {
           </div>
 
           {product.type === 'custom' && customOrdersSuspended && (
-            <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-5 mb-6 text-brand-dark shadow-sm animate-fade-in">
-              <div className="flex items-center gap-3 font-display font-bold text-lg text-amber-900 mb-2">
-                <WarningCircle size={28} weight="fill" className="text-amber-600 flex-shrink-0" />
+            <div className="bg-brand-light/50 border-2 border-brand-pink/60 rounded-3xl p-5 mb-6 text-brand-dark shadow-sm animate-fade-in">
+              <div className="flex items-center gap-3 font-display font-bold text-lg text-brand-magenta mb-2">
+                <WarningCircle size={28} weight="fill" className="text-brand-magenta flex-shrink-0" />
                 <span>Pedidos Personalizados Temporalmente Suspendidos</span>
               </div>
               <p className="text-sm md:text-base text-brand-dark/80 leading-relaxed sm:pl-10">
@@ -566,7 +566,7 @@ export const ProductoDetalle = () => {
                 type="submit" 
                 variant="primary" 
                 disabled={product.type === 'custom' && customOrdersSuspended}
-                className={`flex-1 flex items-center justify-center gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'bg-amber-600 hover:bg-amber-600 opacity-90 cursor-not-allowed' : ''}`}
+                className={`flex-1 flex items-center justify-center gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'bg-brand-magenta/70 hover:bg-brand-magenta/70 opacity-80 cursor-not-allowed' : ''}`}
               >
                 {product.type === 'custom' && customOrdersSuspended ? (
                   <>

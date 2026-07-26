@@ -53,7 +53,7 @@ export const CartSidebar = () => {
             items.map((item) => {
               const isBlockedCustom = customOrdersSuspended && item.product?.type === 'custom';
               return (
-              <div key={item.id} className={`flex gap-4 p-3 rounded-xl border shadow-sm relative pr-10 ${isBlockedCustom ? 'bg-amber-50/90 border-amber-400' : 'bg-white border-brand-pink/20'}`}>
+              <div key={item.id} className={`flex gap-4 p-3 rounded-xl border shadow-sm relative pr-10 ${isBlockedCustom ? 'bg-brand-light/50 border-brand-magenta' : 'bg-white border-brand-pink/20'}`}>
                 <div className="w-16 h-16 bg-brand-light rounded-lg overflow-hidden flex-shrink-0">
                   {item.product.imageUrls && item.product.imageUrls.length > 0 ? (
                     <img src={item.product.imageUrls[0]} alt={item.product.name} className="w-full h-full object-cover" />
@@ -66,7 +66,7 @@ export const CartSidebar = () => {
                     {item.product.name}
                   </h4>
                   {isBlockedCustom && (
-                    <span className="text-[10px] font-bold text-amber-900 bg-amber-200 px-1.5 py-0.5 rounded w-fit my-0.5 flex items-center gap-0.5">
+                    <span className="text-[10px] font-bold text-white bg-brand-magenta px-1.5 py-0.5 rounded w-fit my-0.5 flex items-center gap-0.5">
                       <WarningCircle size={12} weight="fill" /> Suspendido momentáneamente
                     </span>
                   )}
@@ -129,8 +129,8 @@ export const CartSidebar = () => {
         {items.length > 0 && (
           <div className="p-5 border-t border-brand-pink/30 bg-brand-light/30">
             {hasBlockedCustomItems && (
-              <div className="p-3 mb-3 bg-amber-100 border border-amber-300 rounded-xl text-xs text-amber-900 font-medium flex items-center gap-2">
-                <WarningCircle size={20} weight="fill" className="text-amber-700 flex-shrink-0" />
+              <div className="p-3 mb-3 bg-brand-light/80 border border-brand-pink rounded-xl text-xs text-brand-dark font-medium flex items-center gap-2">
+                <WarningCircle size={20} weight="fill" className="text-brand-magenta flex-shrink-0" />
                 <span>Tienes ítems personalizados suspendidos. Elimínalos en el carrito para comprar tus productos en stock.</span>
               </div>
             )}

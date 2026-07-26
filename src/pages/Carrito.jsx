@@ -147,10 +147,10 @@ export const Carrito = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 space-y-4">
             {hasBlockedCustomItems && (
-              <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 flex items-start gap-3 shadow-sm mb-4 animate-fade-in">
-                <WarningCircle size={26} weight="fill" className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="p-4 rounded-2xl bg-brand-light/60 border-2 border-brand-pink/70 text-brand-dark flex items-start gap-3 shadow-sm mb-4 animate-fade-in">
+                <WarningCircle size={26} weight="fill" className="text-brand-magenta flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-sm md:text-base">Atención: Pedidos Personalizados Suspendidos</h4>
+                  <h4 className="font-bold text-sm md:text-base text-brand-magenta">Atención: Pedidos Personalizados Suspendidos</h4>
                   <p className="text-xs md:text-sm text-brand-dark/80 mt-1 leading-relaxed">
                     Tu carrito contiene uno o más productos personalizados cuya toma está suspendida momentáneamente. Para finalizar tu compra de productos en stock, por favor elimina los ítems resaltados.
                   </p>
@@ -161,7 +161,7 @@ export const Carrito = () => {
             {items.map((item) => {
               const isBlockedCustom = customOrdersSuspended && item.product?.type === 'custom';
               return (
-              <div key={item.id} className={`flex gap-4 p-4 rounded-2xl shadow-sm border transition-all ${isBlockedCustom ? 'bg-amber-50/90 border-amber-400 ring-1 ring-amber-400' : 'bg-white border-brand-pink/20'}`}>
+              <div key={item.id} className={`flex gap-4 p-4 rounded-2xl shadow-sm border transition-all ${isBlockedCustom ? 'bg-brand-light/40 border-brand-magenta ring-1 ring-brand-magenta' : 'bg-white border-brand-pink/20'}`}>
                 <div className="w-24 h-24 bg-brand-light rounded-xl overflow-hidden flex-shrink-0">
                   {item.product.imageUrls && item.product.imageUrls.length > 0 ? (
                     <img src={`${item.product.imageUrls[0]}?w=200&auto=format&fit=crop`} alt={item.product.name} className="w-full h-full object-cover" />
@@ -175,7 +175,7 @@ export const Carrito = () => {
                       <div>
                         <h4 className="font-bold text-brand-dark text-lg leading-tight">{item.product.name}</h4>
                         {isBlockedCustom && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-200 px-2.5 py-0.5 rounded-full mt-1.5 shadow-sm">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-brand-magenta px-2.5 py-0.5 rounded-full mt-1.5 shadow-sm">
                             <WarningCircle size={14} weight="fill" /> Suspendido temporalmente
                           </span>
                         )}
@@ -356,11 +356,11 @@ export const Carrito = () => {
             </div>
             <Button 
               variant="primary" 
-              className={`w-full py-4 text-base md:text-lg ${hasBlockedCustomItems ? 'bg-amber-600 hover:bg-amber-600 opacity-95 cursor-not-allowed text-sm' : ''}`} 
+              className={`w-full py-4 text-base md:text-lg ${hasBlockedCustomItems ? 'bg-brand-magenta/70 hover:bg-brand-magenta/70 opacity-80 cursor-not-allowed text-sm' : ''}`} 
               onClick={handleCheckout} 
               disabled={isProcessing || hasBlockedCustomItems}
             >
-              {isProcessing ? 'Procesando...' : (hasBlockedCustomItems ? '⚠️ Elimina ítems personalizados para continuar' : 'Finalizar Compra')}
+              {isProcessing ? 'Procesando...' : (hasBlockedCustomItems ? '🚫 Elimina ítems personalizados para continuar' : 'Finalizar Compra')}
             </Button>
             <p className="text-xs text-center text-brand-dark/60 mt-4 leading-relaxed">
               Al hacer clic, te enviaremos a WhatsApp para coordinar el pago y los detalles del envío.
