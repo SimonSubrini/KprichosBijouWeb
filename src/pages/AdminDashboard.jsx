@@ -3,7 +3,7 @@ import { hashPassword } from '../utils/hash';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
 import { SuspensionManager } from '../components/admin/SuspensionManager';
-import { LockKey, SignOut, Eye, CheckCircle, Clock, Truck, XCircle, CurrencyCircleDollar, Package, Funnel, Calendar, CaretDown, Check, ArrowsCounterClockwise, TrendUp, Wallet, ShoppingBag } from '@phosphor-icons/react';
+import { LockKey, SignOut, Eye, CheckCircle, Clock, Truck, XCircle, CurrencyCircleDollar, Package, Funnel, Calendar, CaretDown, Check, ArrowsCounterClockwise, TrendUp, Wallet, ShoppingBag, ArrowUp, ArrowDown, ArrowsDownUp } from '@phosphor-icons/react';
 
 const STATUS_CONFIG = {
   pendiente_contacto: { label: 'Pendiente de contacto', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock },
@@ -32,11 +32,28 @@ export const AdminDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Valores por defecto (Ítem 63: último mes y estados activos no cancelados ni enviados)
+  const getDefaultDates = () => {
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    return {
+      start: lastMonth.toISOString().split('T')[0],
+      end: today.toISOString().split('T')[0]
+    };
+  };
+  const defaultDates = getDefaultDates();
+  const defaultStatuses = ['pendiente_contacto', 'pendiente_hacer', 'en_curso', 'terminado'];
+
   // Filtros de órdenes
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [selectedStatuses, setSelectedStatuses] = useState(defaultStatuses);
+  const [startDate, setStartDate] = useState(defaultDates.start);
+  const [endDate, setEndDate] = useState(defaultDates.end);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
+  // Ordenamiento de órdenes (Ítem 64)
+  const [sortField, setSortField] = useState('createdAt');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   // Filtrado dinámico de órdenes
   const filteredOrders = orders.filter(order => {
@@ -54,6 +71,41 @@ export const AdminDashboard = () => {
     return true;
   });
 
+  // Ordenar órdenes filtradas
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    let valA, valB;
+    switch (sortField) {
+      case 'createdAt':
+        valA = new Date(a.createdAt || 0).getTime();
+        valB = new Date(b.createdAt || 0).getTime();
+        break;
+      case 'client':
+        valA = (a.customerInfo?.name || '').toLowerCase();
+        valB = (b.customerInfo?.name || '').toLowerCase();
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      case 'status':
+        valA = (STATUS_CONFIG[a.status]?.label || a.status || '').toLowerCase();
+        valB = (STATUS_CONFIG[b.status]?.label || b.status || '').toLowerCase();
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      case 'payment':
+        valA = (PAYMENT_CONFIG[a.paymentStatus]?.label || a.paymentStatus || '').toLowerCase();
+        valB = (PAYMENT_CONFIG[b.paymentStatus]?.label || b.paymentStatus || '').toLowerCase();
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      case 'total':
+        valA = a.totalPrice || 0;
+        valB = b.totalPrice || 0;
+        break;
+      default:
+        valA = new Date(a.createdAt || 0).getTime();
+        valB = new Date(b.createdAt || 0).getTime();
+    }
+    if (sortDirection === 'asc') {
+      return valA > valB ? 1 : (valA < valB ? -1 : 0);
+    } else {
+      return valA < valB ? 1 : (valA > valB ? -1 : 0);
+    }
+  });
+
   // Cálculo de Métricas Financieras sobre filteredOrders
   const metrics = filteredOrders.reduce((acc, order) => {
     if (order.status === 'cancelado') return acc;
@@ -66,10 +118,13 @@ export const AdminDashboard = () => {
     }
     const remaining = Math.max(0, total - paid);
 
+    // Ítem 62: activas son todas aquellas órdenes que NO estén canceladas NI enviadas
+    const isActive = order.status !== 'cancelado' && order.status !== 'enviado';
+
     return {
       totalRevenue: acc.totalRevenue + paid,
       pendingRevenue: acc.pendingRevenue + remaining,
-      activeOrdersCount: acc.activeOrdersCount + 1
+      activeOrdersCount: acc.activeOrdersCount + (isActive ? 1 : 0)
     };
   }, { totalRevenue: 0, pendingRevenue: 0, activeOrdersCount: 0 });
 
@@ -77,6 +132,20 @@ export const AdminDashboard = () => {
     setSelectedStatuses(prev => 
       prev.includes(statusKey) ? prev.filter(s => s !== statusKey) : [...prev, statusKey]
     );
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection(field === 'createdAt' ? 'desc' : 'asc');
+    }
+  };
+
+  const renderSortIcon = (field) => {
+    if (sortField !== field) return <ArrowsDownUp size={14} className="opacity-40" />;
+    return sortDirection === 'asc' ? <ArrowUp size={14} className="text-brand-magenta font-bold" /> : <ArrowDown size={14} className="text-brand-magenta font-bold" />;
   };
 
   const resetFilters = () => {
@@ -338,16 +407,26 @@ export const AdminDashboard = () => {
                 <thead>
                   <tr className="bg-brand-light/50 border-b border-brand-pink/20">
                     <th className="p-4 font-semibold text-brand-dark/70 text-sm">ID Orden</th>
-                    <th className="p-4 font-semibold text-brand-dark/70 text-sm">Fecha</th>
-                    <th className="p-4 font-semibold text-brand-dark/70 text-sm">Cliente</th>
-                    <th className="p-4 font-semibold text-brand-dark/70 text-sm">Estado</th>
-                    <th className="p-4 font-semibold text-brand-dark/70 text-sm">Pago</th>
-                    <th className="p-4 font-semibold text-brand-dark/70 text-sm">Total</th>
+                    <th onClick={() => handleSort('createdAt')} className="p-4 font-semibold text-brand-dark/70 hover:text-brand-dark text-sm cursor-pointer select-none transition-colors">
+                      <div className="flex items-center gap-1"><span>Fecha</span>{renderSortIcon('createdAt')}</div>
+                    </th>
+                    <th onClick={() => handleSort('client')} className="p-4 font-semibold text-brand-dark/70 hover:text-brand-dark text-sm cursor-pointer select-none transition-colors">
+                      <div className="flex items-center gap-1"><span>Cliente</span>{renderSortIcon('client')}</div>
+                    </th>
+                    <th onClick={() => handleSort('status')} className="p-4 font-semibold text-brand-dark/70 hover:text-brand-dark text-sm cursor-pointer select-none transition-colors">
+                      <div className="flex items-center gap-1"><span>Estado</span>{renderSortIcon('status')}</div>
+                    </th>
+                    <th onClick={() => handleSort('payment')} className="p-4 font-semibold text-brand-dark/70 hover:text-brand-dark text-sm cursor-pointer select-none transition-colors">
+                      <div className="flex items-center gap-1"><span>Pago</span>{renderSortIcon('payment')}</div>
+                    </th>
+                    <th onClick={() => handleSort('total')} className="p-4 font-semibold text-brand-dark/70 hover:text-brand-dark text-sm cursor-pointer select-none transition-colors">
+                      <div className="flex items-center gap-1"><span>Total</span>{renderSortIcon('total')}</div>
+                    </th>
                     <th className="p-4 font-semibold text-brand-dark/70 text-sm text-right">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map(order => {
+                  {sortedOrders.map(order => {
                     const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['pendiente_contacto'];
                     const payment = PAYMENT_CONFIG[order.paymentStatus] || PAYMENT_CONFIG['pendiente'];
                     const date = new Date(order.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });

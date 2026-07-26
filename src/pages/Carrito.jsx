@@ -42,6 +42,11 @@ export const Carrito = () => {
       return;
     }
 
+    if (!formData.name.trim()) {
+      alert("Por favor, ingresa tu Nombre y Apellido para poder identificar tu pedido.");
+      return;
+    }
+
     if (!shippingMethod) {
       alert("Por favor, selecciona una opción de envío (Retiro en domicilio o Envío por correo).");
       return;
@@ -49,7 +54,6 @@ export const Carrito = () => {
 
     if (shippingMethod === 'correo') {
       const requiredFields = [
-        { key: 'name', label: 'Nombre y Apellido' },
         { key: 'province', label: 'Provincia' },
         { key: 'city', label: 'Localidad' },
         { key: 'postalCode', label: 'Código Postal' },
@@ -119,7 +123,8 @@ export const Carrito = () => {
       }
       message += `\n`;
     } else if (shippingMethod === 'local') {
-      message += `*Envío:* Retiro por local (Allen, Río Negro)\n\n`;
+      message += `*Envío:* Retiro por local (Allen, Río Negro)\n`;
+      message += `*Nombre:* ${formData.name}\n\n`;
     }
     message += `*Total (sin envio):* $${finalTotal}\n\n`;
     
@@ -240,7 +245,13 @@ export const Carrito = () => {
           </div>
           
           <div className="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-brand-pink/20 h-fit sticky top-24">
-            <h3 className="text-xl font-bold font-display text-brand-dark mb-5">Opciones de Envío</h3>
+            <h3 className="text-xl font-bold font-display text-brand-dark mb-4">Datos de Contacto</h3>
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-brand-dark mb-1">Nombre y Apellido *</label>
+              <input type="text" required name="name" value={formData.name} onChange={handleFormChange} placeholder="Ej: María López" className="w-full p-2.5 text-sm border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta bg-brand-light/10" />
+            </div>
+
+            <h3 className="text-xl font-bold font-display text-brand-dark mb-4">Opciones de Envío</h3>
             
             <div className="flex flex-col gap-3 mb-6">
               <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-brand-pink/30 hover:bg-brand-light/30 transition-colors">
@@ -276,10 +287,6 @@ export const Carrito = () => {
 
             {shippingMethod === 'correo' && (
               <div className="mb-6 space-y-4 p-4 bg-brand-light/20 rounded-xl border border-brand-pink/30 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-brand-dark mb-1">Nombre y Apellido *</label>
-                  <input type="text" required name="name" value={formData.name} onChange={handleFormChange} placeholder="Ej: Maria Lopez" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
-                </div>
                 <div>
                   <label className="block text-xs font-semibold text-brand-dark mb-1">Provincia *</label>
                   <input type="text" required name="province" value={formData.province} onChange={handleFormChange} placeholder="Ej: Río Negro" className="w-full p-2 text-sm border border-brand-pink/50 rounded-lg focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta" />
