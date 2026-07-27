@@ -25,7 +25,7 @@ export const SuspensionModal = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border-4 border-brand-magenta relative text-center transform animate-scale-up">
-        <button 
+        <button
           onClick={dismissModal}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-brand-dark rounded-full hover:bg-gray-100 transition-colors"
           title="Cerrar aviso"
@@ -52,13 +52,13 @@ export const SuspensionModal = () => {
           </span>
         </div>
 
-        <Button 
-          variant="primary" 
-          size="lg" 
+        <Button
+          variant="primary"
+          size="lg"
           className="w-full justify-center py-3 text-base shadow-md"
           onClick={() => {
             dismissModal();
-            navigate('/productos');
+            navigate('/productos?type=stock');
           }}
         >
           Entendido, ver catálogo en stock
