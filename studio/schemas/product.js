@@ -155,6 +155,12 @@ export default {
                         { name: 'image', title: 'Imagen (Tooltip)', type: 'image' }
                       ]
                     }]
+                  },
+                  {
+                    name: 'accessoryReference',
+                    title: 'Vincular a Tabla de Accesorios',
+                    type: 'reference',
+                    to: [{ type: 'accessory' }]
                   }
                 ]
               }],

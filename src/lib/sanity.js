@@ -43,6 +43,18 @@ export const fetchProducts = async () => {
         childChoices[]{
           ...,
           "imageUrl": image.asset->url
+        },
+        accessoryReference->{
+          _id,
+          name,
+          stockType,
+          options[]{
+            _key,
+            value,
+            stockCount,
+            isAvailable,
+            "imageUrl": image.asset->url
+          }
         }
       }
     },
@@ -88,6 +100,18 @@ export const fetchProductById = async (id) => {
         childChoices[]{
           ...,
           "imageUrl": image.asset->url
+        },
+        accessoryReference->{
+          _id,
+          name,
+          stockType,
+          options[]{
+            _key,
+            value,
+            stockCount,
+            isAvailable,
+            "imageUrl": image.asset->url
+          }
         }
       }
     },

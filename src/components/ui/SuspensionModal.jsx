@@ -2,11 +2,12 @@ import React, { useEffect } from 'react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { Button } from './Button';
 import { WarningCircle, X, Package } from '@phosphor-icons/react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const SuspensionModal = () => {
   const { customOrdersSuspended, suspensionMessage, isModalDismissed, loadSettings, dismissModal } = useSettingsStore();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadSettings();
@@ -55,7 +56,10 @@ export const SuspensionModal = () => {
           variant="primary" 
           size="lg" 
           className="w-full justify-center py-3 text-base shadow-md"
-          onClick={dismissModal}
+          onClick={() => {
+            dismissModal();
+            navigate('/productos');
+          }}
         >
           Entendido, ver catálogo en stock
         </Button>

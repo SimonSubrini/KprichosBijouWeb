@@ -69,7 +69,8 @@ export default async function handler(req, res) {
               childChoices[]{
                 ...,
                 "imageUrl": image.asset->url
-              }
+              },
+              "accessoryRefId": accessoryReference._ref
             },
             "accessoryRefId": accessoryReference._ref
           }

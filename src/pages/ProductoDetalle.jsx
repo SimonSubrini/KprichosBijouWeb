@@ -8,10 +8,16 @@ import { CustomDropdown } from '../components/ui/CustomDropdown';
 import { ShoppingCart, CaretLeft, CaretRight, Minus, Plus, ArrowLeft, WarningCircle, HandPalm } from '@phosphor-icons/react';
 import { PortableText } from '@portabletext/react';
 
-const capitalize = (str) => {
+const toCapitalCase = (str) => {
   if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  return String(str)
+    .trim()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };
+
+const capitalize = toCapitalCase;
 
 export const ProductoDetalle = () => {
   const { id } = useParams();
@@ -123,6 +129,7 @@ export const ProductoDetalle = () => {
     // Parse custom values
     let customizationsString = Object.entries(customValues)
       .map(([key, value]) => {
+        if (key.startsWith('__toggle_')) return null;
         if (!value || value === 'Ninguno / Sin agregados') return null;
         if (typeof value === 'string' && !value.trim()) return null;
         
@@ -132,7 +139,7 @@ export const ProductoDetalle = () => {
         }
 
         if (optionDef && optionDef.type === 'accessory' && optionDef.accessoryReference) {
-          const accOpt = optionDef.accessoryReference.options?.find(o => o.value === value.trim());
+          const accOpt = optionDef.accessoryReference.options?.find(o => toCapitalCase(o.value) === toCapitalCase(value.trim()) || o.value === value.trim());
           if (accOpt) {
             accessorySelections.push({
               accessoryId: optionDef.accessoryReference._id,
@@ -141,6 +148,25 @@ export const ProductoDetalle = () => {
               stockCount: accOpt.stockCount,
               stockType: optionDef.accessoryReference.stockType
             });
+          }
+        }
+
+        // Soporte de stock para menús anidados vinculados a tabla de accesorios
+        const parentNestedDef = options.find(opt => opt.type === 'nested' && opt.childOptionName === key);
+        if (parentNestedDef && parentNestedDef.nestedOptions) {
+          const selectedParent = customValues[parentNestedDef.optionName];
+          const activeGroup = parentNestedDef.nestedOptions.find(n => toCapitalCase(n.parentChoice) === toCapitalCase(selectedParent) || n.parentChoice === selectedParent);
+          if (activeGroup && activeGroup.accessoryReference) {
+            const accOpt = activeGroup.accessoryReference.options?.find(o => toCapitalCase(o.value) === toCapitalCase(value.trim()) || o.value === value.trim());
+            if (accOpt) {
+              accessorySelections.push({
+                accessoryId: activeGroup.accessoryReference._id,
+                optionValue: accOpt.value,
+                optionKey: accOpt._key,
+                stockCount: accOpt.stockCount,
+                stockType: activeGroup.accessoryReference.stockType
+              });
+            }
           }
         }
 
@@ -365,10 +391,55 @@ export const ProductoDetalle = () => {
                   
                   {options.map((opt, i) => {
                     if (opt.type === 'text') {
+                      const hasExtraCost = opt.extraCost > 0;
+                      const toggleKey = `__toggle_${opt.optionName}`;
+                      const isToggled = customValues[toggleKey] ?? false;
+
+                      if (hasExtraCost) {
+                        return (
+                          <div key={i} className="flex flex-col gap-3 p-4 bg-brand-light/30 border border-brand-pink/30 rounded-2xl shadow-sm">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold text-brand-dark">
+                                ¿Añadir {toCapitalCase(opt.optionName)}? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span>
+                              </span>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  className="sr-only peer"
+                                  checked={isToggled}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    handleCustomChange(toggleKey, checked);
+                                    if (!checked) {
+                                      handleCustomChange(opt.optionName, '');
+                                    }
+                                  }}
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-magenta"></div>
+                              </label>
+                            </div>
+                            {isToggled && (
+                              <div className="flex flex-col gap-1.5 mt-1 animate-fade-in">
+                                <label className="text-xs font-medium text-brand-dark/70">
+                                  Detalles para {toCapitalCase(opt.optionName)}:
+                                </label>
+                                <textarea 
+                                  rows="2"
+                                  className="p-3 bg-white border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark resize-none"
+                                  placeholder="Escribe aquí los detalles..."
+                                  value={customValues[opt.optionName] || ''}
+                                  onChange={(e) => handleCustomChange(opt.optionName, e.target.value)}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
                       return (
                         <div key={i} className="flex flex-col gap-2">
                           <label className="text-sm font-semibold text-brand-dark">
-                            {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                            {toCapitalCase(opt.optionName)}
                           </label>
                           <textarea 
                             rows="2"
@@ -387,10 +458,12 @@ export const ProductoDetalle = () => {
                       if (!hasExtraCost) optionsArr.push({ value: '', label: 'Seleccionar...' });
                       if (hasExtraCost) optionsArr.push({ value: 'Ninguno / Sin agregados', label: `Ninguno / Sin agregados (+$0)` });
                       
-                      (opt.listOptions || []).forEach(lo => {
+                      const sortedList = [...(opt.listOptions || [])].sort((a, b) => a.value.localeCompare(b.value, 'es'));
+                      sortedList.forEach(lo => {
+                        const capVal = toCapitalCase(lo.value);
                         optionsArr.push({
-                          value: lo.value,
-                          label: lo.value,
+                          value: capVal,
+                          label: capVal,
                           image: lo.imageUrl
                         });
                       });
@@ -400,7 +473,7 @@ export const ProductoDetalle = () => {
                       return (
                         <div key={i} className="flex flex-col gap-2">
                           <label className="text-sm font-semibold text-brand-dark">
-                            {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                            {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                           </label>
                           <CustomDropdown 
                             options={optionsArr}
@@ -414,7 +487,7 @@ export const ProductoDetalle = () => {
 
                     if (opt.type === 'nested') {
                       const hasExtraCost = opt.extraCost > 0;
-                      const parentChoices = opt.nestedOptions ? opt.nestedOptions.map(n => n.parentChoice) : [];
+                      const parentChoices = opt.nestedOptions ? opt.nestedOptions.map(n => toCapitalCase(n.parentChoice)).sort((a, b) => a.localeCompare(b, 'es')) : [];
                       
                       const parentOptions = [];
                       if (!hasExtraCost) parentOptions.push({ value: '', label: 'Seleccionar...' });
@@ -423,13 +496,34 @@ export const ProductoDetalle = () => {
 
                       const selectedParent = customValues[opt.optionName] || (hasExtraCost ? 'Ninguno / Sin agregados' : '');
                       
-                      const activeNestedGroup = opt.nestedOptions?.find(n => n.parentChoice === selectedParent);
-                      const childChoices = activeNestedGroup?.childChoices || [];
-                      const childOptions = childChoices.map(c => ({
-                        value: c.value,
-                        label: c.value,
-                        image: c.imageUrl
-                      }));
+                      const activeNestedGroup = opt.nestedOptions?.find(n => toCapitalCase(n.parentChoice) === toCapitalCase(selectedParent) || n.parentChoice === selectedParent);
+                      
+                      let childOptions = [];
+                      if (activeNestedGroup && activeNestedGroup.accessoryReference) {
+                        const accGroup = activeNestedGroup.accessoryReference;
+                        const isFinite = accGroup.stockType === 'finite';
+                        const sortedAccs = [...(accGroup.options || [])].sort((a, b) => a.value.localeCompare(b.value, 'es'));
+                        childOptions = sortedAccs.map(lo => {
+                          const outOfStock = isFinite ? lo.stockCount <= 0 : !lo.isAvailable;
+                          const capVal = toCapitalCase(lo.value);
+                          return {
+                            value: capVal,
+                            label: capVal + (outOfStock ? ' (Sin stock)' : ''),
+                            image: lo.imageUrl,
+                            disabled: outOfStock
+                          };
+                        });
+                      } else {
+                        const childChoices = [...(activeNestedGroup?.childChoices || [])].sort((a, b) => a.value.localeCompare(b.value, 'es'));
+                        childOptions = childChoices.map(c => {
+                          const capVal = toCapitalCase(c.value);
+                          return {
+                            value: capVal,
+                            label: capVal,
+                            image: c.imageUrl
+                          };
+                        });
+                      }
 
                       const showChild = selectedParent && selectedParent !== 'Ninguno / Sin agregados' && childOptions.length > 0;
 
@@ -437,7 +531,7 @@ export const ProductoDetalle = () => {
                         <div key={i} className="flex flex-col gap-4 p-5 bg-brand-light/30 border border-brand-pink/30 rounded-2xl">
                           <div className="flex flex-col gap-2">
                             <label className="text-sm font-semibold text-brand-dark">
-                              {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                              {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                             </label>
                             <CustomDropdown 
                               options={parentOptions}
@@ -453,12 +547,17 @@ export const ProductoDetalle = () => {
                           {showChild && (
                             <div className="flex flex-col gap-2 animate-fade-in pl-4 border-l-2 border-brand-pink/40 mt-1">
                               <label className="text-sm font-semibold text-brand-dark">
-                                {opt.childOptionName}
+                                {toCapitalCase(opt.childOptionName)}
                               </label>
                               <CustomDropdown 
                                 options={[{value: '', label: 'Seleccionar...'}, ...childOptions]}
                                 value={customValues[opt.childOptionName] || ''}
-                                onChange={(val) => handleCustomChange(opt.childOptionName, val)}
+                                onChange={(val) => {
+                                  handleCustomChange(opt.childOptionName, val);
+                                  if (activeNestedGroup?.accessoryReference) {
+                                    setQuantity(1);
+                                  }
+                                }}
                                 placeholder="Seleccionar..."
                               />
                             </div>
@@ -476,11 +575,13 @@ export const ProductoDetalle = () => {
                       if (!hasExtraCost) optionsArr.push({ value: '', label: 'Seleccionar...' });
                       if (hasExtraCost) optionsArr.push({ value: 'Ninguno / Sin agregados', label: `Ninguno / Sin agregados (+$0)` });
                       
-                      (accGroup.options || []).forEach(lo => {
+                      const sortedAcc = [...(accGroup.options || [])].sort((a, b) => a.value.localeCompare(b.value, 'es'));
+                      sortedAcc.forEach(lo => {
                         const outOfStock = isFinite ? lo.stockCount <= 0 : !lo.isAvailable;
+                        const capVal = toCapitalCase(lo.value);
                         optionsArr.push({
-                          value: lo.value,
-                          label: lo.value + (outOfStock ? ' (Sin stock)' : ''),
+                          value: capVal,
+                          label: capVal + (outOfStock ? ' (Sin stock)' : ''),
                           image: lo.imageUrl,
                           disabled: outOfStock
                         });
@@ -491,7 +592,7 @@ export const ProductoDetalle = () => {
                       return (
                         <div key={i} className="flex flex-col gap-2">
                           <label className="text-sm font-semibold text-brand-dark">
-                            {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                            {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                           </label>
                           <CustomDropdown 
                             options={optionsArr}
@@ -506,13 +607,13 @@ export const ProductoDetalle = () => {
                       );
                     }
 
-                    const choices = opt.choices ? opt.choices.split(',').map(c => capitalize(c.trim())).sort() : [];
+                    const choices = opt.choices ? opt.choices.split(',').map(c => toCapitalCase(c.trim())).sort((a, b) => a.localeCompare(b, 'es')) : [];
                     const hasExtraCost = opt.extraCost > 0;
 
                     return (
                       <div key={i} className="flex flex-col gap-2">
                         <label className="text-sm font-semibold text-brand-dark">
-                          {opt.optionName} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                          {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
                         </label>
                         <select 
                           className="p-3 bg-brand-light/20 border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"

@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Plus, Trash, Image as ImageIcon, CheckCircle, XCircle, CaretDown, CaretUp, Info, Package, ListBullets, TextT, ImageSquare, TreeStructure, PuzzlePiece } from '@phosphor-icons/react';
 import { compressImageToWebP } from '../../utils/imageCompressor';
 
 export const CustomizationBuilder = ({ options = [], onChange, accessories = [], adminHash }) => {
   const [uploadingKey, setUploadingKey] = useState(null);
+  const [newlyAddedKey, setNewlyAddedKey] = useState(null);
 
   // Helper para generar claves únicas de Sanity
   const generateKey = () => Math.random().toString(36).substring(2, 9);
 
+  useEffect(() => {
+    if (newlyAddedKey) {
+      const el = document.getElementById(`custom-option-card-${newlyAddedKey}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setNewlyAddedKey(null);
+    }
+  }, [newlyAddedKey, options]);
+
   const handleAddOption = () => {
+    const newKey = generateKey();
     const newOption = {
-      _key: generateKey(),
+      _key: newKey,
       optionName: 'Nueva Selección',
       type: 'list',
       choices: '',
@@ -21,6 +33,15 @@ export const CustomizationBuilder = ({ options = [], onChange, accessories = [],
       extraCost: 0
     };
     onChange([...options, newOption]);
+    setNewlyAddedKey(newKey);
+  };
+
+  const handleMoveOption = (fromIdx, toIdx) => {
+    if (toIdx < 0 || toIdx >= options.length) return;
+    const updated = [...options];
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(toIdx, 0, moved);
+    onChange(updated);
   };
 
   const handleUpdateOption = (index, field, value) => {
@@ -99,7 +120,7 @@ export const CustomizationBuilder = ({ options = [], onChange, accessories = [],
       ) : (
         <div className="space-y-6">
           {options.map((opt, idx) => (
-            <div key={opt._key || idx} className="bg-white p-5 rounded-2xl border border-brand-pink/40 shadow-sm transition-all hover:border-brand-pink">
+            <div key={opt._key || idx} id={`custom-option-card-${opt._key || idx}`} className="bg-white p-5 rounded-2xl border border-brand-pink/40 shadow-sm transition-all hover:border-brand-pink">
               
               {/* Encabezado de la Variable */}
               <div className="flex flex-wrap md:flex-nowrap items-center gap-4 pb-4 border-b border-brand-pink/20 mb-4">
@@ -145,13 +166,34 @@ export const CustomizationBuilder = ({ options = [], onChange, accessories = [],
                   />
                 </div>
 
-                <button 
-                  onClick={() => handleRemoveOption(idx)}
-                  className="p-2.5 mt-4 md:mt-0 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
-                  title="Eliminar Variable"
-                >
-                  <Trash size={20} />
-                </button>
+                <div className="flex items-center gap-1 mt-4 md:mt-0 self-end md:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => handleMoveOption(idx, idx - 1)}
+                    disabled={idx === 0}
+                    className="p-2.5 text-brand-dark/70 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-gray-100 rounded-xl transition-colors"
+                    title="Subir variable"
+                  >
+                    <CaretUp size={20} weight="bold" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveOption(idx, idx + 1)}
+                    disabled={idx === options.length - 1}
+                    className="p-2.5 text-brand-dark/70 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-gray-100 rounded-xl transition-colors"
+                    title="Bajar variable"
+                  >
+                    <CaretDown size={20} weight="bold" />
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => handleRemoveOption(idx)}
+                    className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-colors ml-1"
+                    title="Eliminar Variable"
+                  >
+                    <Trash size={20} />
+                  </button>
+                </div>
               </div>
 
               {/* Contenido según el Tipo de Entrada */}
@@ -327,77 +369,124 @@ export const CustomizationBuilder = ({ options = [], onChange, accessories = [],
                             </button>
                           </div>
 
-                          <div className="pl-4 border-l-2 border-orange-200 space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[11px] font-medium text-gray-500">Mostrar las siguientes opciones secundarias:</span>
-                              <button
-                                type="button"
-                                onClick={() => {
+                          <div className="pl-4 border-l-2 border-orange-200 space-y-3">
+                            <div className="bg-orange-50/50 p-3 rounded-xl border border-orange-200/60">
+                              <label className="block text-[11px] font-bold text-orange-900 mb-1.5">
+                                🔗 Origen de datos para la lista hija:
+                              </label>
+                              <select 
+                                value={grp.accessoryReference?._ref || grp.accessoryRefId || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const refObj = val ? { _type: 'reference', _ref: val } : null;
                                   const newGrp = [...opt.nestedOptions];
-                                  const currentChildren = newGrp[grpIdx].childChoices || [];
-                                  newGrp[grpIdx].childChoices = [...currentChildren, { _key: generateKey(), value: 'Nueva variante', image: null }];
+                                  newGrp[grpIdx] = { ...newGrp[grpIdx], accessoryReference: refObj };
                                   handleUpdateOption(idx, 'nestedOptions', newGrp);
                                 }}
-                                className="text-[11px] bg-orange-100 text-orange-800 font-bold px-2 py-0.5 rounded hover:bg-orange-200"
+                                className="w-full p-2 rounded-lg border border-orange-300 text-xs font-semibold bg-white focus:outline-none focus:border-orange-500 text-brand-dark"
                               >
-                                + Sub-opción
-                              </button>
+                                <option value="">✏️ Carga Manual (Añadir sub-opciones a mano)</option>
+                                {accessories.filter(acc => !acc.isArchived).map(acc => (
+                                  <option key={acc._id} value={acc._id}>
+                                    📦 Tabla de Accesorios: {acc.name} ({acc.stockType === 'finite' ? 'Stock contable' : 'Infinito'})
+                                  </option>
+                                ))}
+                              </select>
                             </div>
 
-                            {(grp.childChoices || []).map((child, chIdx) => (
-                              <div key={child._key || chIdx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg text-xs">
-                                <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
-                                <input 
-                                  type="text"
-                                  value={child.value || ''}
-                                  onChange={(e) => {
-                                    const newGrp = [...opt.nestedOptions];
-                                    newGrp[grpIdx].childChoices[chIdx] = { ...newGrp[grpIdx].childChoices[chIdx], value: e.target.value };
-                                    handleUpdateOption(idx, 'nestedOptions', newGrp);
-                                  }}
-                                  className="flex-grow p-1 rounded border border-gray-300 bg-white"
-                                  placeholder="Variante (Ej: Rojo, Oro...)"
-                                />
-
-                                {child.imageUrl ? (
-                                  <img src={child.imageUrl} alt="" className="w-7 h-7 rounded object-cover border" />
-                                ) : child.image?.asset && (
-                                  <CheckCircle size={18} className="text-green-500" />
-                                )}
-
-                                <label className="cursor-pointer bg-white px-2 py-1 rounded border border-gray-300 text-[10px] font-bold hover:bg-gray-100">
-                                  <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files[0];
-                                      handleUploadImage(file, (imageRef, previewUrl) => {
-                                        const newGrp = [...opt.nestedOptions];
-                                        newGrp[grpIdx].childChoices[chIdx] = { 
-                                          ...newGrp[grpIdx].childChoices[chIdx], 
-                                          image: imageRef,
-                                          imageUrl: previewUrl 
-                                        };
-                                        handleUpdateOption(idx, 'nestedOptions', newGrp);
-                                      });
+                            {(grp.accessoryReference?._ref || grp.accessoryRefId) ? (() => {
+                              const selectedId = grp.accessoryReference?._ref || grp.accessoryRefId;
+                              const matchedAcc = accessories.find(a => a._id === selectedId);
+                              if (!matchedAcc) return null;
+                              return (
+                                <div className="p-3 bg-white rounded-xl border border-orange-200 text-xs">
+                                  <p className="font-bold text-orange-700 mb-1">✅ Accesorio vinculado: {matchedAcc.name}</p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {matchedAcc.options?.map((subOpt, sIdx) => (
+                                      <span key={subOpt._key || sIdx} className="bg-orange-50 px-2 py-0.5 rounded text-[10px] text-orange-900 border border-orange-200 font-medium">
+                                        {subOpt.value} {matchedAcc.stockType === 'finite' ? `(Stock: ${subOpt.stockCount || 0})` : ''}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <p className="text-[10px] text-orange-700/70 mt-2 italic">
+                                    Nota: Cuando el cliente elija "{grp.parentChoice}", este menú secundario mostrará automáticamente las opciones de esta tabla con su stock en tiempo real.
+                                  </p>
+                                </div>
+                              );
+                            })() : (
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[11px] font-medium text-gray-500">Mostrar las siguientes opciones secundarias:</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newGrp = [...opt.nestedOptions];
+                                      const currentChildren = newGrp[grpIdx].childChoices || [];
+                                      newGrp[grpIdx].childChoices = [...currentChildren, { _key: generateKey(), value: 'Nueva variante', image: null }];
+                                      handleUpdateOption(idx, 'nestedOptions', newGrp);
                                     }}
-                                  />
-                                  📷 Foto
-                                </label>
+                                    className="text-[11px] bg-orange-100 text-orange-800 font-bold px-2 py-0.5 rounded hover:bg-orange-200"
+                                  >
+                                    + Sub-opción
+                                  </button>
+                                </div>
 
-                                <button
-                                  onClick={() => {
-                                    const newGrp = [...opt.nestedOptions];
-                                    newGrp[grpIdx].childChoices = newGrp[grpIdx].childChoices.filter((_, i) => i !== chIdx);
-                                    handleUpdateOption(idx, 'nestedOptions', newGrp);
-                                  }}
-                                  className="text-red-400 hover:text-red-600 ml-1"
-                                >
-                                  <XCircle size={16} weight="fill" />
-                                </button>
+                                {(grp.childChoices || []).map((child, chIdx) => (
+                                  <div key={child._key || chIdx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg text-xs">
+                                    <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
+                                    <input 
+                                      type="text"
+                                      value={child.value || ''}
+                                      onChange={(e) => {
+                                        const newGrp = [...opt.nestedOptions];
+                                        newGrp[grpIdx].childChoices[chIdx] = { ...newGrp[grpIdx].childChoices[chIdx], value: e.target.value };
+                                        handleUpdateOption(idx, 'nestedOptions', newGrp);
+                                      }}
+                                      className="flex-grow p-1 rounded border border-gray-300 bg-white"
+                                      placeholder="Variante (Ej: Rojo, Oro...)"
+                                    />
+
+                                    {child.imageUrl ? (
+                                      <img src={child.imageUrl} alt="" className="w-7 h-7 rounded object-cover border" />
+                                    ) : child.image?.asset && (
+                                      <CheckCircle size={18} className="text-green-500" />
+                                    )}
+
+                                    <label className="cursor-pointer bg-white px-2 py-1 rounded border border-gray-300 text-[10px] font-bold hover:bg-gray-100">
+                                      <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files[0];
+                                          handleUploadImage(file, (imageRef, previewUrl) => {
+                                            const newGrp = [...opt.nestedOptions];
+                                            newGrp[grpIdx].childChoices[chIdx] = { 
+                                              ...newGrp[grpIdx].childChoices[chIdx], 
+                                              image: imageRef,
+                                              imageUrl: previewUrl 
+                                            };
+                                            handleUpdateOption(idx, 'nestedOptions', newGrp);
+                                          });
+                                        }}
+                                      />
+                                      📷 Foto
+                                    </label>
+
+                                    <button
+                                      onClick={() => {
+                                        const newGrp = [...opt.nestedOptions];
+                                        newGrp[grpIdx].childChoices = newGrp[grpIdx].childChoices.filter((_, i) => i !== chIdx);
+                                        handleUpdateOption(idx, 'nestedOptions', newGrp);
+                                      }}
+                                      className="text-red-400 hover:text-red-600 ml-1"
+                                    >
+                                      <XCircle size={16} weight="fill" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
                           </div>
                         </div>
                       ))}
