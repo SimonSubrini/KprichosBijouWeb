@@ -334,8 +334,13 @@ export const CustomizationBuilder = ({ options = [], onChange, accessories = [],
                         size="sm"
                         variant="outline"
                         onClick={() => {
+                          const newKey = generateKey();
                           const currentNested = opt.nestedOptions || [];
-                          handleUpdateOption(idx, 'nestedOptions', [...currentNested, { _key: generateKey(), parentChoice: 'Ej: Forma Corazón', childChoices: [] }]);
+                          handleUpdateOption(idx, 'nestedOptions', [...currentNested, { _key: newKey, parentChoice: 'Ej: Forma Corazón', childChoices: [] }]);
+                          setTimeout(() => {
+                            const el = document.getElementById(`nested-group-${newKey}`);
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }, 100);
                         }}
                       >
                         + Añadir Grupo Padre-Hijo
@@ -344,7 +349,7 @@ export const CustomizationBuilder = ({ options = [], onChange, accessories = [],
 
                     <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                       {(opt.nestedOptions || []).map((grp, grpIdx) => (
-                        <div key={grp._key || grpIdx} className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm space-y-3">
+                        <div key={grp._key || grpIdx} id={`nested-group-${grp._key || grpIdx}`} className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm space-y-3">
                           <div className="flex items-center gap-2 border-b border-orange-100 pb-2">
                             <span className="text-xs font-bold text-orange-600 uppercase">Cuando el cliente elija:</span>
                             <input 
@@ -381,7 +386,17 @@ export const CustomizationBuilder = ({ options = [], onChange, accessories = [],
                                   const refObj = val ? { _type: 'reference', _ref: val } : null;
                                   const newGrp = [...opt.nestedOptions];
                                   newGrp[grpIdx] = { ...newGrp[grpIdx], accessoryReference: refObj };
-                                  handleUpdateOption(idx, 'nestedOptions', newGrp);
+                                  
+                                  let newOpt = { ...opt, nestedOptions: newGrp };
+                                  if (val && (!newOpt.childOptionName || newOpt.childOptionName.trim() === '')) {
+                                    const matchedAcc = accessories.find(a => a._id === val);
+                                    if (matchedAcc) {
+                                      newOpt.childOptionName = matchedAcc.name;
+                                    }
+                                  }
+                                  
+                                  const updated = options.map((o, i) => i === idx ? newOpt : o);
+                                  onChange(updated);
                                 }}
                                 className="w-full p-2 rounded-lg border border-orange-300 text-xs font-semibold bg-white focus:outline-none focus:border-orange-500 text-brand-dark"
                               >
