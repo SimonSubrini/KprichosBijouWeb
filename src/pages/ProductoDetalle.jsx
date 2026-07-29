@@ -243,6 +243,20 @@ export const ProductoDetalle = () => {
           currentMaxAllowed = Math.min(currentMaxAllowed, accOpt.stockCount);
         }
       }
+    } else if (opt.type === 'nested') {
+      const parentVal = customValues[opt.optionName];
+      if (parentVal && parentVal !== 'Ninguno / Sin agregados') {
+        const activeGroup = opt.nestedOptions?.find(n => toCapitalCase(n.parentChoice) === toCapitalCase(parentVal) || n.parentChoice === parentVal);
+        if (activeGroup && activeGroup.accessoryReference) {
+          const childVal = customValues[opt.childOptionName];
+          if (childVal) {
+            const accOpt = activeGroup.accessoryReference.options?.find(o => o.value === childVal);
+            if (accOpt && activeGroup.accessoryReference.stockType === 'finite') {
+              currentMaxAllowed = Math.min(currentMaxAllowed, accOpt.stockCount);
+            }
+          }
+        }
+      }
     }
   });
 
@@ -420,8 +434,9 @@ export const ProductoDetalle = () => {
                             </div>
                             {isToggled && (
                               <div className="flex flex-col gap-1.5 mt-1 animate-fade-in">
-                                <label className="text-xs font-medium text-brand-dark/70">
-                                  Detalles para {toCapitalCase(opt.optionName)}:
+                                <label className="text-xs font-medium text-brand-dark/70 flex justify-between">
+                                  <span>Detalles para {toCapitalCase(opt.optionName)}:</span>
+                                  <span className="text-brand-magenta">*Requerido</span>
                                 </label>
                                 <textarea 
                                   rows="2"
@@ -438,8 +453,9 @@ export const ProductoDetalle = () => {
 
                       return (
                         <div key={i} className="flex flex-col gap-2">
-                          <label className="text-sm font-semibold text-brand-dark">
-                            {toCapitalCase(opt.optionName)}
+                          <label className="text-sm font-semibold text-brand-dark flex justify-between">
+                            <span>{toCapitalCase(opt.optionName)}</span>
+                            <span className="text-brand-magenta text-xs font-normal">*Requerido</span>
                           </label>
                           <textarea 
                             rows="2"
@@ -472,8 +488,9 @@ export const ProductoDetalle = () => {
 
                       return (
                         <div key={i} className="flex flex-col gap-2">
-                          <label className="text-sm font-semibold text-brand-dark">
-                            {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                          <label className="text-sm font-semibold text-brand-dark flex justify-between">
+                            <span>{toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}</span>
+                            {!opt.extraCost && <span className="text-brand-magenta text-xs font-normal">*Requerido</span>}
                           </label>
                           <CustomDropdown 
                             options={optionsArr}
@@ -504,11 +521,11 @@ export const ProductoDetalle = () => {
                         const isFinite = accGroup.stockType === 'finite';
                         const sortedAccs = [...(accGroup.options || [])].sort((a, b) => a.value.localeCompare(b.value, 'es'));
                         childOptions = sortedAccs.map(lo => {
-                          const outOfStock = isFinite ? lo.stockCount <= 0 : !lo.isAvailable;
+                          const outOfStock = isFinite ? lo.stockCount < quantity : !lo.isAvailable;
                           const capVal = toCapitalCase(lo.value);
                           return {
                             value: capVal,
-                            label: capVal + (outOfStock ? ' (Sin stock)' : ''),
+                            label: capVal + (isFinite ? ` (${lo.stockCount} disponibles)` : (outOfStock ? ' (Sin stock)' : '')),
                             image: lo.imageUrl,
                             disabled: outOfStock
                           };
@@ -530,8 +547,9 @@ export const ProductoDetalle = () => {
                       return (
                         <div key={i} className="flex flex-col gap-4 p-5 bg-brand-light/30 border border-brand-pink/30 rounded-2xl">
                           <div className="flex flex-col gap-2">
-                            <label className="text-sm font-semibold text-brand-dark">
-                              {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                            <label className="text-sm font-semibold text-brand-dark flex justify-between">
+                              <span>{toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}</span>
+                              {!opt.extraCost && <span className="text-brand-magenta text-xs font-normal">*Requerido</span>}
                             </label>
                             <CustomDropdown 
                               options={parentOptions}
@@ -546,8 +564,9 @@ export const ProductoDetalle = () => {
 
                           {showChild && (
                             <div className="flex flex-col gap-2 animate-fade-in pl-4 border-l-2 border-brand-pink/40 mt-1">
-                              <label className="text-sm font-semibold text-brand-dark">
-                                {toCapitalCase(opt.childOptionName)}
+                              <label className="text-sm font-semibold text-brand-dark flex justify-between">
+                                <span>{toCapitalCase(opt.childOptionName)}</span>
+                                <span className="text-brand-magenta text-xs font-normal">*Requerido</span>
                               </label>
                               <CustomDropdown 
                                 options={[{value: '', label: 'Seleccionar...'}, ...childOptions]}
@@ -577,11 +596,11 @@ export const ProductoDetalle = () => {
                       
                       const sortedAcc = [...(accGroup.options || [])].sort((a, b) => a.value.localeCompare(b.value, 'es'));
                       sortedAcc.forEach(lo => {
-                        const outOfStock = isFinite ? lo.stockCount <= 0 : !lo.isAvailable;
+                        const outOfStock = isFinite ? lo.stockCount < quantity : !lo.isAvailable;
                         const capVal = toCapitalCase(lo.value);
                         optionsArr.push({
                           value: capVal,
-                          label: capVal + (outOfStock ? ' (Sin stock)' : ''),
+                          label: capVal + (isFinite ? ` (${lo.stockCount} disponibles)` : (outOfStock ? ' (Sin stock)' : '')),
                           image: lo.imageUrl,
                           disabled: outOfStock
                         });
@@ -591,8 +610,9 @@ export const ProductoDetalle = () => {
 
                       return (
                         <div key={i} className="flex flex-col gap-2">
-                          <label className="text-sm font-semibold text-brand-dark">
-                            {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                          <label className="text-sm font-semibold text-brand-dark flex justify-between">
+                            <span>{toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}</span>
+                            {!opt.extraCost && <span className="text-brand-magenta text-xs font-normal">*Requerido</span>}
                           </label>
                           <CustomDropdown 
                             options={optionsArr}
@@ -612,8 +632,9 @@ export const ProductoDetalle = () => {
 
                     return (
                       <div key={i} className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-brand-dark">
-                          {toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}
+                        <label className="text-sm font-semibold text-brand-dark flex justify-between">
+                          <span>{toCapitalCase(opt.optionName)} {opt.extraCost ? <span className="text-brand-magenta font-normal">(+${opt.extraCost})</span> : ''}</span>
+                          {!opt.extraCost && <span className="text-brand-magenta text-xs font-normal">*Requerido</span>}
                         </label>
                         <select 
                           className="p-3 bg-brand-light/20 border border-brand-pink/50 rounded-xl focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all text-sm text-brand-dark"
@@ -653,7 +674,7 @@ export const ProductoDetalle = () => {
                     if (quantity < currentMaxAllowed) {
                       setQuantity(q => q + 1);
                     } else {
-                      alert("No hay más stock disponible para este producto o uno de sus accesorios.");
+                      alert("Para añadir más unidades, primero debes remover o cambiar los accesorios con inventario limitado a la cantidad solicitada.");
                     }
                   }}
                   className={`p-1 rounded-full transition-colors ${product.type === 'custom' && customOrdersSuspended ? 'text-gray-300 cursor-not-allowed' : 'text-brand-dark hover:text-brand-magenta'}`}

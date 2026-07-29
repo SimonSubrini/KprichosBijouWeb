@@ -141,8 +141,19 @@ export const AccessoriesManager = ({ accessories, adminHash, onRefresh }) => {
 };
 
 const AccessoryEditor = ({ acc, onSave, onCancel, isSubmitting, adminHash }) => {
-  const [formData, setFormData] = useState(acc);
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`draft_acc_${acc._id}`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return acc;
+  });
   const [uploadingImageKey, setUploadingImageKey] = useState(null);
+  const optionsEndRef = React.useRef(null);
+
+  React.useEffect(() => {
+    localStorage.setItem(`draft_acc_${acc._id}`, JSON.stringify(formData));
+  }, [formData, acc._id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -156,7 +167,10 @@ const AccessoryEditor = ({ acc, onSave, onCancel, isSubmitting, adminHash }) => 
       isAvailable: true,
       image: null
     };
-    setFormData({ ...formData, options: [...(formData.options || []), newOption] });
+    setFormData(prev => ({ ...prev, options: [...(prev.options || []), newOption] }));
+    setTimeout(() => {
+      optionsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleUpdateOption = (key, field, value) => {
@@ -326,11 +340,20 @@ const AccessoryEditor = ({ acc, onSave, onCancel, isSubmitting, adminHash }) => 
             Aún no has agregado ninguna opción.
           </p>
         )}
+        <div ref={optionsEndRef} />
       </div>
 
       <div className="flex justify-end gap-3 pt-6 border-t border-brand-pink/30">
-        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
-        <Button variant="primary" onClick={() => onSave(formData)} disabled={isSubmitting || !formData.name.trim()}>
+        <Button variant="outline" onClick={() => {
+          if (confirm("¿Descartar los cambios no guardados?")) {
+            localStorage.removeItem(`draft_acc_${acc._id}`);
+            onCancel();
+          }
+        }} disabled={isSubmitting}>Cancelar</Button>
+        <Button variant="primary" onClick={() => {
+          localStorage.removeItem(`draft_acc_${acc._id}`);
+          onSave(formData);
+        }} disabled={isSubmitting || !formData.name.trim()}>
           {isSubmitting ? 'Guardando...' : 'Guardar Accesorio'}
         </Button>
       </div>

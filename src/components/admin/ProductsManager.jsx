@@ -169,6 +169,11 @@ export const ProductsManager = ({ products = [], accessories = [], adminHash, on
 
 const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitting, adminHash }) => {
   const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`draft_prod_${product._id}`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+
     const initialLongDesc = Array.isArray(product.longDescription)
       ? product.longDescription.map(b => b.children?.map?.(c => c.text || '').join('') || '').join('\n\n')
       : (typeof product.longDescription === 'string' ? product.longDescription : '');
@@ -178,6 +183,10 @@ const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitti
     };
   });
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  React.useEffect(() => {
+    localStorage.setItem(`draft_prod_${product._id}`, JSON.stringify(formData));
+  }, [formData, product._id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -285,8 +294,16 @@ const ProductEditor = ({ product, accessories = [], onSave, onCancel, isSubmitti
           {product._id === 'new' ? 'Crear Producto Nuevo' : 'Editar Producto'}
         </h3>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
-          <Button variant="primary" onClick={() => onSave(formData)} disabled={isSubmitting || !formData.name.trim()}>
+          <Button variant="outline" onClick={() => {
+            if (confirm("¿Descartar los cambios no guardados?")) {
+              localStorage.removeItem(`draft_prod_${product._id}`);
+              onCancel();
+            }
+          }} disabled={isSubmitting}>Cancelar</Button>
+          <Button variant="primary" onClick={() => {
+            localStorage.removeItem(`draft_prod_${product._id}`);
+            onSave(formData);
+          }} disabled={isSubmitting || !formData.name.trim()}>
             {isSubmitting ? 'Guardando...' : 'Guardar Producto'}
           </Button>
         </div>

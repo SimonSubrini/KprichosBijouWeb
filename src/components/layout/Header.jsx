@@ -32,7 +32,16 @@ export const Header = () => {
               <Link to="/admin/stock" className={`hover:text-brand-magenta transition-colors ${location.pathname === '/admin/stock' ? 'text-brand-magenta font-bold' : ''}`}>Stock</Link>
             </nav>
             <div className="flex items-center gap-4">
-              <button onClick={() => { logout(); navigate('/'); }} className="flex items-center gap-2 p-2 text-brand-dark hover:text-brand-magenta transition-colors font-medium">
+              <button onClick={() => { 
+                if (location.pathname.startsWith('/admin')) {
+                  if (window.confirm("¿Estás seguro que deseas cerrar sesión? Si tienes cambios pendientes en los editores, están guardados automáticamente como borradores en tu navegador.")) {
+                    logout(); 
+                    navigate('/');
+                  }
+                } else {
+                  logout(); navigate('/'); 
+                }
+              }} className="flex items-center gap-2 p-2 text-brand-dark hover:text-brand-magenta transition-colors font-medium">
                 <SignOut size={24} /> <span className="hidden sm:inline">Cerrar Sesión</span>
               </button>
             </div>

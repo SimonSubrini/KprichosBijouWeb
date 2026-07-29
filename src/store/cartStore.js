@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-export const useCartStore = create((set, get) => ({
+export const useCartStore = create(
+  persist(
+    (set, get) => ({
   items: [],
   isSidebarOpen: false,
   openSidebar: () => set({ isSidebarOpen: true }),
@@ -58,4 +61,6 @@ export const useCartStore = create((set, get) => ({
       return discount;
     }, 0);
   },
+}), {
+  name: 'kprichos-cart-storage',
 }));
