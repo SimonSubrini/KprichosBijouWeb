@@ -8,7 +8,7 @@ export const useCartStore = create(
   isSidebarOpen: false,
   openSidebar: () => set({ isSidebarOpen: true }),
   closeSidebar: () => set({ isSidebarOpen: false }),
-  addItem: (product, quantity = 1, customizations = null) => {
+  addItem: (product, quantity = 1, customizations = null, waCustomizations = null) => {
     set((state) => {
       // Basic implementation for now
       const existingItem = state.items.find(
@@ -25,7 +25,7 @@ export const useCartStore = create(
       }
 
       return { 
-        items: [...state.items, { product, quantity, customizations, id: Date.now().toString() }],
+        items: [...state.items, { product, quantity, customizations, waCustomizations, id: Date.now().toString() }],
         isSidebarOpen: true,
       };
     });

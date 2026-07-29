@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchProductById } from '../lib/sanity';
 import { useCartStore } from '../store/cartStore';
+import { getTrueMaxAllowed } from '../utils/stockUtils';
 import { useSettingsStore } from '../store/settingsStore';
 import { Button } from '../components/ui/Button';
 import { CustomDropdown } from '../components/ui/CustomDropdown';
@@ -33,6 +34,7 @@ export const ProductoDetalle = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const addItem = useCartStore((state) => state.addItem);
+  const cartItems = useCartStore((state) => state.items);
   const { customOrdersSuspended, suspensionMessage } = useSettingsStore();
 
   useEffect(() => {
@@ -126,6 +128,8 @@ export const ProductoDetalle = () => {
     let totalExtraCost = 0;
     const accessorySelections = [];
     
+    let waCustomizationsString = "";
+    
     // Parse custom values
     let customizationsString = Object.entries(customValues)
       .map(([key, value]) => {
@@ -178,6 +182,28 @@ export const ProductoDetalle = () => {
       .filter(Boolean)
       .join(' | ');
 
+    // Construir string para WhatsApp respetando anidación
+    let waLines = [];
+    if (product.hasModels && selectedModel) {
+      waLines.push(`Modelo: ${selectedModel}`);
+    }
+    options.forEach(opt => {
+      const val = customValues[opt.optionName];
+      if (val && val !== 'Ninguno / Sin agregados' && (typeof val !== 'string' || val.trim())) {
+        let line = `${opt.optionName}: ${val.trim()}`;
+        if (opt.extraCost) line += ` (+ $${opt.extraCost})`;
+        waLines.push(line);
+        
+        if (opt.type === 'nested') {
+          const childVal = customValues[opt.childOptionName];
+          if (childVal) {
+            waLines.push(`  - ${opt.childOptionName}: ${childVal.trim()}`);
+          }
+        }
+      }
+    });
+    waCustomizationsString = waLines.join('\n    - ');
+
     let finalPrice = product.basePrice;
 
     if (product.hasModels && selectedModel) {
@@ -188,29 +214,11 @@ export const ProductoDetalle = () => {
       }
     }
 
-    let maxAllowed = Infinity;
-    let maxAllowedReason = 'este producto o uno de sus accesorios';
-    if (product.type === 'stock') {
-      if (product.hasModels && selectedModel) {
-        const m = product.models.find(m => m.name === selectedModel);
-        maxAllowed = m?.stockCount || Infinity;
-        maxAllowedReason = `el modelo "${selectedModel}"`;
-      } else {
-        maxAllowed = product.stockCount;
-        maxAllowedReason = 'el producto base';
-      }
-    }
-    accessorySelections.forEach(acc => {
-      if (acc.stockType === 'finite') {
-        if (acc.stockCount < maxAllowed) {
-          maxAllowed = acc.stockCount;
-          maxAllowedReason = `el accesorio "${acc.optionValue}"`;
-        }
-      }
-    });
+    const { maxAllowed, reason: maxAllowedReason } = getTrueMaxAllowed(product, selectedModel, accessorySelections, cartItems);
 
     const customizedProduct = {
       ...product,
+      selectedModel,
       basePrice: finalPrice + totalExtraCost,
       accessorySelections,
       maxAllowed,
@@ -218,7 +226,7 @@ export const ProductoDetalle = () => {
       imageUrls: modelOverrideImage ? [modelOverrideImage, ...(product.imageUrls || [])] : product.imageUrls
     };
 
-    addItem(customizedProduct, quantity, customizationsString);
+    addItem(customizedProduct, quantity, customizationsString, waCustomizationsString);
     navigate('/productos'); // Opcional: volver al catálogo después de agregar
   };
 
@@ -234,28 +242,20 @@ export const ProductoDetalle = () => {
     }
   }
 
-  let currentMaxAllowed = Infinity;
-  let currentMaxAllowedReason = 'este producto';
-  if (product.type === 'stock') {
-    if (product.hasModels && selectedModel) {
-      const m = product.models.find(m => m.name === selectedModel);
-      currentMaxAllowed = m?.stockCount || Infinity;
-      currentMaxAllowedReason = `el modelo "${selectedModel}"`;
-    } else {
-      currentMaxAllowed = product.stockCount;
-      currentMaxAllowedReason = 'el producto base';
-    }
-  }
+  // Obtener currentMaxAllowed dinámicamente usando las selecciones actuales
+  const tempAccessorySelections = [];
   options.forEach(opt => {
     if (opt.type === 'accessory' && opt.accessoryReference) {
       const val = customValues[opt.optionName];
       if (val && val !== 'Ninguno / Sin agregados') {
         const accOpt = opt.accessoryReference.options?.find(o => o.value === val);
         if (accOpt && opt.accessoryReference.stockType === 'finite') {
-          if (accOpt.stockCount < currentMaxAllowed) {
-            currentMaxAllowed = accOpt.stockCount;
-            currentMaxAllowedReason = `el accesorio "${val}"`;
-          }
+          tempAccessorySelections.push({
+            accessoryId: opt.accessoryReference._id,
+            optionValue: accOpt.value,
+            stockCount: accOpt.stockCount,
+            stockType: 'finite'
+          });
         }
       }
     } else if (opt.type === 'nested') {
@@ -267,16 +267,25 @@ export const ProductoDetalle = () => {
           if (childVal) {
             const accOpt = activeGroup.accessoryReference.options?.find(o => o.value === childVal);
             if (accOpt && activeGroup.accessoryReference.stockType === 'finite') {
-              if (accOpt.stockCount < currentMaxAllowed) {
-                currentMaxAllowed = accOpt.stockCount;
-                currentMaxAllowedReason = `el accesorio "${childVal}"`;
-              }
+              tempAccessorySelections.push({
+                accessoryId: activeGroup.accessoryReference._id,
+                optionValue: accOpt.value,
+                stockCount: accOpt.stockCount,
+                stockType: 'finite'
+              });
             }
           }
         }
       }
     }
   });
+
+  const { maxAllowed: currentMaxAllowed, reason: currentMaxAllowedReason } = getTrueMaxAllowed(
+    product,
+    selectedModel,
+    tempAccessorySelections,
+    cartItems
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 animate-fade-in">

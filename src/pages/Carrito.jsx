@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { getTrueMaxAllowed } from '../utils/stockUtils';
 import { Button } from '../components/ui/Button';
 import { Trash, Minus, Plus, WarningCircle } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
@@ -97,7 +98,9 @@ export const Carrito = () => {
     let message = "Hola Kprichos Bijou! Me gustaría realizar el siguiente pedido:\n\n";
     items.forEach(item => {
       message += `- ${item.quantity}x ${item.product.name} ($${item.product.basePrice * item.quantity})\n`;
-      if (item.customizations) {
+      if (item.waCustomizations) {
+        message += `  Personalización:\n    - ${item.waCustomizations}\n`;
+      } else if (item.customizations) {
         const customList = item.customizations.split(' | ').join('\n    - ');
         message += `  Personalización:\n    - ${customList}\n`;
       }
@@ -205,8 +208,13 @@ export const Carrito = () => {
                       <span className="font-medium text-sm min-w-[20px] text-center">{item.quantity}</span>
                       <button 
                         onClick={() => {
-                          const maxAllowed = item.product.maxAllowed ?? Infinity;
-                          const reason = item.product.maxAllowedReason || "este producto o uno de sus accesorios";
+                          const { maxAllowed, reason } = getTrueMaxAllowed(
+                            item.product, 
+                            item.product.selectedModel, 
+                            item.product.accessorySelections, 
+                            items, 
+                            item.id 
+                          );
                           if (item.quantity < maxAllowed) {
                             updateQuantity(item.id, 1);
                           } else {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCartStore } from '../../store/cartStore';
 import { useSettingsStore } from '../../store/settingsStore';
+import { getTrueMaxAllowed } from '../../utils/stockUtils';
 import { Button } from './Button';
 import { X, Trash, ShoppingCart, Minus, Plus, WarningCircle } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -81,8 +82,18 @@ export const CartSidebar = () => {
                       <span className="font-medium text-xs min-w-[16px] text-center">{item.quantity}</span>
                       <button 
                         onClick={() => {
-                          const maxAllowed = item.product.maxAllowed ?? Infinity;
-                          const reason = item.product.maxAllowedReason || "este producto o uno de sus accesorios";
+                          // Excluimos este item de la validación cruzada para simular el +1 correctamente
+                          // O mejor, obtenemos el límite total disponible y vemos si la nueva cantidad lo supera
+                          const { maxAllowed, reason } = getTrueMaxAllowed(
+                            item.product, 
+                            item.product.selectedModel, 
+                            item.product.accessorySelections, 
+                            items, 
+                            item.id // Excluimos el item actual porque calcularemos limit - used (de otros)
+                          );
+                          // Entonces maxAllowed es lo disponible sin contar lo de ESTE item
+                          // La cantidad total de este item no debe superar maxAllowed + lo que ya estaba (pero maxAllowed devuelve limit - usedOther, es decir el máximo absoluto que ESTE item puede tomar)
+                          
                           if (item.quantity < maxAllowed) {
                             updateQuantity(item.id, 1);
                           } else {
