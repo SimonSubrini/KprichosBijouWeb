@@ -189,16 +189,23 @@ export const ProductoDetalle = () => {
     }
 
     let maxAllowed = Infinity;
+    let maxAllowedReason = 'este producto o uno de sus accesorios';
     if (product.type === 'stock') {
       if (product.hasModels && selectedModel) {
-        maxAllowed = product.models.find(m => m.name === selectedModel)?.stockCount || Infinity;
+        const m = product.models.find(m => m.name === selectedModel);
+        maxAllowed = m?.stockCount || Infinity;
+        maxAllowedReason = `el modelo "${selectedModel}"`;
       } else {
         maxAllowed = product.stockCount;
+        maxAllowedReason = 'el producto base';
       }
     }
     accessorySelections.forEach(acc => {
       if (acc.stockType === 'finite') {
-        maxAllowed = Math.min(maxAllowed, acc.stockCount);
+        if (acc.stockCount < maxAllowed) {
+          maxAllowed = acc.stockCount;
+          maxAllowedReason = `el accesorio "${acc.optionValue}"`;
+        }
       }
     });
 
@@ -207,6 +214,7 @@ export const ProductoDetalle = () => {
       basePrice: finalPrice + totalExtraCost,
       accessorySelections,
       maxAllowed,
+      maxAllowedReason,
       imageUrls: modelOverrideImage ? [modelOverrideImage, ...(product.imageUrls || [])] : product.imageUrls
     };
 
@@ -227,11 +235,15 @@ export const ProductoDetalle = () => {
   }
 
   let currentMaxAllowed = Infinity;
+  let currentMaxAllowedReason = 'este producto';
   if (product.type === 'stock') {
     if (product.hasModels && selectedModel) {
-      currentMaxAllowed = product.models.find(m => m.name === selectedModel)?.stockCount || Infinity;
+      const m = product.models.find(m => m.name === selectedModel);
+      currentMaxAllowed = m?.stockCount || Infinity;
+      currentMaxAllowedReason = `el modelo "${selectedModel}"`;
     } else {
       currentMaxAllowed = product.stockCount;
+      currentMaxAllowedReason = 'el producto base';
     }
   }
   options.forEach(opt => {
@@ -240,7 +252,10 @@ export const ProductoDetalle = () => {
       if (val && val !== 'Ninguno / Sin agregados') {
         const accOpt = opt.accessoryReference.options?.find(o => o.value === val);
         if (accOpt && opt.accessoryReference.stockType === 'finite') {
-          currentMaxAllowed = Math.min(currentMaxAllowed, accOpt.stockCount);
+          if (accOpt.stockCount < currentMaxAllowed) {
+            currentMaxAllowed = accOpt.stockCount;
+            currentMaxAllowedReason = `el accesorio "${val}"`;
+          }
         }
       }
     } else if (opt.type === 'nested') {
@@ -252,7 +267,10 @@ export const ProductoDetalle = () => {
           if (childVal) {
             const accOpt = activeGroup.accessoryReference.options?.find(o => o.value === childVal);
             if (accOpt && activeGroup.accessoryReference.stockType === 'finite') {
-              currentMaxAllowed = Math.min(currentMaxAllowed, accOpt.stockCount);
+              if (accOpt.stockCount < currentMaxAllowed) {
+                currentMaxAllowed = accOpt.stockCount;
+                currentMaxAllowedReason = `el accesorio "${childVal}"`;
+              }
             }
           }
         }
@@ -674,7 +692,7 @@ export const ProductoDetalle = () => {
                     if (quantity < currentMaxAllowed) {
                       setQuantity(q => q + 1);
                     } else {
-                      alert("Para añadir más unidades, primero debes remover o cambiar los accesorios con inventario limitado a la cantidad solicitada.");
+                      alert(`No hay más stock disponible para ${currentMaxAllowedReason}.`);
                     }
                   }}
                   className={`p-1 rounded-full transition-colors ${product.type === 'custom' && customOrdersSuspended ? 'text-gray-300 cursor-not-allowed' : 'text-brand-dark hover:text-brand-magenta'}`}

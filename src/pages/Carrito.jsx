@@ -206,10 +206,11 @@ export const Carrito = () => {
                       <button 
                         onClick={() => {
                           const maxAllowed = item.product.maxAllowed ?? Infinity;
+                          const reason = item.product.maxAllowedReason || "este producto o uno de sus accesorios";
                           if (item.quantity < maxAllowed) {
                             updateQuantity(item.id, 1);
                           } else {
-                            alert("No hay más stock disponible para este producto o uno de sus accesorios.");
+                            alert(`No hay más stock disponible para ${reason}.`);
                           }
                         }}
                         className="text-brand-dark hover:text-brand-magenta w-6 h-6 flex items-center justify-center rounded-full bg-white shadow-sm"
