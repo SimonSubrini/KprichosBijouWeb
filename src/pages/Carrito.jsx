@@ -99,7 +99,7 @@ export const Carrito = () => {
     items.forEach(item => {
       message += `- ${item.quantity}x ${item.product.name} ($${item.product.basePrice * item.quantity})\n`;
       if (item.waCustomizations) {
-        message += `  Personalización:\n    - ${item.waCustomizations}\n`;
+        message += `  Personalización:\n${item.waCustomizations}\n`;
       } else if (item.customizations) {
         const customList = item.customizations.split(' | ').join('\n    - ');
         message += `  Personalización:\n    - ${customList}\n`;

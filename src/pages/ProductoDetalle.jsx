@@ -185,24 +185,24 @@ export const ProductoDetalle = () => {
     // Construir string para WhatsApp respetando anidación
     let waLines = [];
     if (product.hasModels && selectedModel) {
-      waLines.push(`Modelo: ${selectedModel}`);
+      waLines.push(`    - Modelo: ${selectedModel}`);
     }
     options.forEach(opt => {
       const val = customValues[opt.optionName];
       if (val && val !== 'Ninguno / Sin agregados' && (typeof val !== 'string' || val.trim())) {
-        let line = `${opt.optionName}: ${val.trim()}`;
+        let line = `    - ${opt.optionName}: ${val.trim()}`;
         if (opt.extraCost) line += ` (+ $${opt.extraCost})`;
         waLines.push(line);
         
         if (opt.type === 'nested') {
           const childVal = customValues[opt.childOptionName];
           if (childVal) {
-            waLines.push(`  - ${opt.childOptionName}: ${childVal.trim()}`);
+            waLines.push(`    ↳ ${opt.childOptionName}: ${childVal.trim()}`);
           }
         }
       }
     });
-    waCustomizationsString = waLines.join('\n    - ');
+    waCustomizationsString = waLines.join('\n');
 
     let finalPrice = product.basePrice;
 
@@ -714,13 +714,18 @@ export const ProductoDetalle = () => {
               <Button 
                 type="submit" 
                 variant="primary" 
-                disabled={product.type === 'custom' && customOrdersSuspended}
-                className={`flex-1 flex items-center justify-center gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'bg-brand-magenta/70 hover:bg-brand-magenta/70 opacity-80 cursor-not-allowed' : ''}`}
+                disabled={(product.type === 'custom' && customOrdersSuspended) || currentMaxAllowed < 1}
+                className={`flex-1 flex items-center justify-center gap-2 ${(product.type === 'custom' && customOrdersSuspended) || currentMaxAllowed < 1 ? 'bg-brand-magenta/70 hover:bg-brand-magenta/70 opacity-80 cursor-not-allowed' : ''}`}
               >
                 {product.type === 'custom' && customOrdersSuspended ? (
                   <>
                     <HandPalm size={22} weight="fill" />
                     <span>Pedidos Personalizados Suspendidos</span>
+                  </>
+                ) : currentMaxAllowed < 1 ? (
+                  <>
+                    <WarningCircle size={20} weight="bold" />
+                    <span>Sin stock ({currentMaxAllowedReason})</span>
                   </>
                 ) : (
                   <>
