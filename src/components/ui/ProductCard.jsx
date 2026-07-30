@@ -31,8 +31,14 @@ export const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Si tiene modelos o es personalizado, redirigimos a la página de detalles
-    if (product.hasModels || product.type === 'custom') {
+    const isOutOfStock = product.type === 'stock' && (
+      product.hasModels 
+        ? product.models?.every(m => m.stockCount <= 0) 
+        : product.stockCount <= 0
+    );
+
+    // Si tiene modelos, es personalizado o no hay stock, redirigimos a la página de detalles
+    if (product.hasModels || product.type === 'custom' || isOutOfStock) {
       navigate(`/producto/${product._id}`);
     } else {
       addItem(product, 1);
@@ -43,6 +49,12 @@ export const ProductCard = ({ product }) => {
   const displayPrice = product.hasModels && product.models?.length > 0 
     ? `Desde $${Math.min(...product.models.map(m => m.price))}` 
     : `$${product.basePrice}`;
+
+  const isOutOfStock = product.type === 'stock' && (
+    product.hasModels 
+      ? product.models?.every(m => m.stockCount <= 0) 
+      : product.stockCount <= 0
+  );
 
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-brand-pink/20 flex flex-col h-full cursor-pointer relative">
@@ -106,9 +118,11 @@ export const ProductCard = ({ product }) => {
             variant={!product.hasModels && product.type === 'stock' ? 'primary' : 'outline'} 
             size="sm" 
             onClick={handleAddToCart}
-            className={`flex gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'border-brand-magenta text-brand-magenta hover:bg-brand-magenta hover:text-white' : ''}`}
+            className={`flex gap-2 ${product.type === 'custom' && customOrdersSuspended ? 'border-brand-magenta text-brand-magenta hover:bg-brand-magenta hover:text-white' : ''} ${isOutOfStock ? '!bg-gray-200 !text-gray-500 !border-gray-300 opacity-70 hover:!bg-gray-200 hover:!text-gray-500' : ''}`}
           >
-            {!product.hasModels && product.type === 'stock' ? (
+            {isOutOfStock ? (
+              <span className="line-through decoration-gray-500">Sin stock</span>
+            ) : !product.hasModels && product.type === 'stock' ? (
               <><ShoppingCart size={18} weight="bold" /> Agregar</>
             ) : (product.type === 'custom' && customOrdersSuspended ? 'Ver Estado' : 'Personalizar')}
           </Button>
